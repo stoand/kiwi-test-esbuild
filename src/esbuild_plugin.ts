@@ -1,6 +1,9 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as wtf from 'tracing-framework';
+
+global.wtf = wtf;
 
 const SOURCEMAP_SPLIT = '//# sourceMappingURL=data:application/json;base64,'
 
@@ -35,9 +38,26 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     
     Function(await GOOGLE_TRACING_FRAMEWORK)();
     
-    Function('console.log(WTF)')();
-
-    Function(code);
+    let testSource = `
+        WTF.trace.prepare();
+    
+        function other() {
+            console.log("add = ", 1+3);
+        }
+    
+        WTF.trace.start();
+        
+        other();
+        
+        let buffer = [];
+        
+        WTF.trace.snapshot(buffer);
+        
+        console.log(buffer[0]);
+        console.log(buffer[0].buffer_.toString('utf8'));
+    `;
+    
+    Function(testSource)();
 }
 
 export let kiwiPlugin = {

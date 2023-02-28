@@ -34,6 +34,7 @@
   "homepage": "https://github.com/stoand/kiwi-test-esbuild#readme",
   "dependencies": {
     "@types/node": "^18.14.2",
+    "tracing-framework": "^2015.7.15-1",
     "tsx": "^3.12.3"
   }
 }
