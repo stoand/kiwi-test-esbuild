@@ -1,0 +1,39 @@
+{
+  "name": "kiwi-test-esbuild",
+  "version": "0.0.1",
+  "description": "JS Realtime Inline Test Runner for Kakoune",
+  "main": "src/esbuild_plugin.ts",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "tsx watch src/tests.ts",
+    "test-once": "tsx src/tests.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/stoand/kiwi-test-esbuild.git"
+  },
+  "keywords": [
+    "kak",
+    "kakoune",
+    "kakoune-plugin",
+    "plugin",
+    "kiwi",
+    "esbuild",
+    "javascript",
+    "inline",
+    "test",
+    "runner"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stoand/kiwi-test-esbuild/issues"
+  },
+  "homepage": "https://github.com/stoand/kiwi-test-esbuild#readme",
+  "dependencies": {
+    "@types/node": "^18.14.2",
+    "tsx": "^3.12.3"
+  }
+}

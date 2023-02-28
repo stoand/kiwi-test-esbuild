@@ -1,0 +1,14 @@
+{
+  "name": "kiwi-esbuild-example-minimal",
+  "version": "1.0.0",
+  "description": "Minimal Example of how Kiwi Esbuild can be used",
+  "scripts": {
+    "test": "tsx esbuild.test.ts"
+  },
+  "author": "",
+  "dependencies": {
+    "esbuild": "^0.17.10",
+    "tsx": "^3.12.3",
+    "kiwi-test-esbuild": "file:../../"
+  }
+}
