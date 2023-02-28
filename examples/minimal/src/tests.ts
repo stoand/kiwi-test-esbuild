@@ -1,3 +1,3 @@
 import { add } from './app';
 
-console.log('add result = ', add(1, 3));
+console.log('add result = ', add(2, 3));

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
-    "test": "tsx esbuild.test.ts"
+    "kiwi": "tsx kiwi-test.ts",
+    "kiwi-watch-super": "tsx watch kiwi-test.ts"
   },
   "author": "",
   "dependencies": {
