@@ -42,9 +42,22 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     let sourceMapBuffer = new Buffer(sourceMapBase64, 'base64');
     let sourceMapJson = sourceMapBuffer.toString('ascii');
+    
+    let actualSource = `(() => {
+  // src/app.ts
+  function add(a, b) {
+    return a + b;
+  }
+
+  // src/tests.ts
+  console.log("add result = ", add(2, 3));
+})();
+    `
+
+    console.log(code);
 
     let sourceMapConsumer = new sourceMap.SourceMapConsumer(sourceMapJson as any);
-    console.log(sourceMapConsumer);
+    // console.log(sourceMapConsumer);
 
     let accumulatedLineLengths = calcAccumulatedLineLengths(code);
 
@@ -58,10 +71,17 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         let end = range[1] == null ? null : originalPositionFromOffset(range[1]);
         return [start, end];
     }
+    
+    // console.log(code);
 
     console.log('offsets covered:', offsetsCovered.map(originalPositionForRange));
 
-    console.log('all instrumented', findInstumentedItems(code).map(originalPositionForRange));
+    // console.log('all instrumented', findInstumentedItems(code));
+    // console.log('all instrumented', findInstumentedItems(code).map(originalPositionForRange));
+    
+    for (let i = 1; i < 13; i ++ ) {
+        console.log(sourceMapConsumer.originalPositionFor({line: i, column: 4}));
+    }
 }
 
 function findInstumentedItems(source) {
