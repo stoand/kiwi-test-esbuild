@@ -2,6 +2,7 @@ import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import sourceMap from 'source-map';
+import { calcAccumulatedLineLengths, positionFromOffset } from './compute';
 
 const SOURCE_MAP_SPLIT = '//# sourceMappingURL=data:application/json;base64,'
 
@@ -38,16 +39,29 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         
         return __OFFSETS_COVERED;
     `)();
-    
+
     let sourceMapBuffer = new Buffer(sourceMapBase64, 'base64');
     let sourceMapJson = sourceMapBuffer.toString('ascii');
 
-    console.log('offsets covered:', offsetsCovered);
-
-    console.log('all instrumented', findInstumentedItems(code));
-    
-    let sourceMapConsumer = await (new sourceMap.SourceMapConsumer(sourceMapJson as any));
+    let sourceMapConsumer = new sourceMap.SourceMapConsumer(sourceMapJson as any);
     console.log(sourceMapConsumer);
+
+    let accumulatedLineLengths = calcAccumulatedLineLengths(code);
+
+    let originalPositionFromOffset = (offset) => {
+        let position = positionFromOffset(offset, accumulatedLineLengths);
+        return sourceMapConsumer.originalPositionFor(position);
+    }
+
+    let originalPositionForRange = (range) => {
+        let start = originalPositionFromOffset(range[0]);
+        let end = range[1] == null ? null : originalPositionFromOffset(range[1]);
+        return [start, end];
+    }
+
+    console.log('offsets covered:', offsetsCovered.map(originalPositionForRange));
+
+    console.log('all instrumented', findInstumentedItems(code).map(originalPositionForRange));
 }
 
 function findInstumentedItems(source) {
