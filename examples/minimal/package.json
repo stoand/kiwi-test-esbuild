@@ -4,11 +4,14 @@
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
     "kiwi": "../../node_modules/.bin/tsx kiwi-test.ts",
-    "kiwi-watch-super": "../../node_modules/.bin/tsx  watch kiwi-test.ts"
+    "kiwi-watch-super": "../../node_modules/.bin/tsx  watch kiwi-test.ts",
+    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi-watch-super"
   },
   "author": "",
   "dependencies": {
+    "esbuild": "^0.17.10",
     "kiwi-test-esbuild": "file:../../",
     "tsx": "^3.12.3"
   }
 }
+
