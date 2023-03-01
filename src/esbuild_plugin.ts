@@ -28,11 +28,38 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     console.log(sourcemap);
 
     console.log('Running ...');
+
+    let offsetsCovered = Function(`
+        let __OFFSETS_COVERED = [];
     
-    let testSource = `
-    `;
-    
-    Function(testSource)();
+        function __INST(start, end, expr = undefined) {
+            __OFFSETS_COVERED.push([start, end]);
+            return expr;
+        }
+        
+        ${code}
+        
+        return __OFFSETS_COVERED;
+    `)();
+
+    console.log('offsets covered:', offsetsCovered);
+
+    console.log('all instrumented', findInstumentedItems(code));
+
+}
+
+function findInstumentedItems(source) {
+    let items = source.matchAll(/__INST\((\d+), (null|\d+)/g);
+
+    let matches = [];
+    for (let item of items) {
+        let start = Number(item[1]);
+        let end = item[2] == 'null' ? null : Number(item[2]);
+
+        matches.push([start, end]);
+    }
+
+    return matches;
 }
 
 export let kiwiPlugin = {
@@ -41,3 +68,4 @@ export let kiwiPlugin = {
         build.onEnd(runTests);
     },
 };
+

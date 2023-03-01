@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "tsx watch src/tests.ts",
-    "test-once": "tsx src/tests.ts"
+    "test-once": "tsx src/tests.ts",
+    "test-kakoune": "tsx watch src/kakoune_interface_tests.ts"
   },
   "repository": {
     "type": "git",

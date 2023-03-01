@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
-    "kiwi": "tsx kiwi-test.ts",
-    "kiwi-watch-super": "tsx watch kiwi-test.ts"
+    "kiwi": "../../node_modules/.bin/tsx kiwi-test.ts",
+    "kiwi-watch-super": "../../node_modules/.bin/tsx  watch kiwi-test.ts"
   },
   "author": "",
   "dependencies": {
-    "esbuild": "^0.17.10",
-    "tsx": "^3.12.3",
-    "kiwi-test-esbuild": "file:../../"
+    "kiwi-test-esbuild": "file:../../",
+    "tsx": "^3.12.3"
   }
 }
