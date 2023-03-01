@@ -1,15 +1,8 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as wtf from 'tracing-framework';
-
-global.wtf = wtf;
 
 const SOURCEMAP_SPLIT = '//# sourceMappingURL=data:application/json;base64,'
-
-// https://google.github.io/tracing-framework/instrumenting-code.html#automatic-instrumentation
-// note: we await this promise later
-const GOOGLE_TRACING_FRAMEWORK = fs.readFile(path.join(__dirname, 'google_tracing_framework.js'), { encoding: 'utf8' });
 
 function now() {
     return new Date();
@@ -36,25 +29,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     console.log('Running ...');
     
-    Function(await GOOGLE_TRACING_FRAMEWORK)();
-    
     let testSource = `
-        WTF.trace.prepare();
-    
-        function other() {
-            console.log("add = ", 1+3);
-        }
-    
-        WTF.trace.start();
-        
-        other();
-        
-        let buffer = [];
-        
-        WTF.trace.snapshot(buffer);
-        
-        console.log(buffer[0]);
-        console.log(buffer[0].buffer_.toString('utf8'));
     `;
     
     Function(testSource)();
