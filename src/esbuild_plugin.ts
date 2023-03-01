@@ -1,8 +1,9 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import sourceMap from 'source-map';
 
-const SOURCEMAP_SPLIT = '//# sourceMappingURL=data:application/json;base64,'
+const SOURCE_MAP_SPLIT = '//# sourceMappingURL=data:application/json;base64,'
 
 function now() {
     return new Date();
@@ -23,11 +24,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let { outputFiles } = await results;
     let text = outputFiles[0].text;
 
-    let [code, sourcemap] = text.split(SOURCEMAP_SPLIT);
-    console.log(code, '\n');
-    console.log(sourcemap);
-
-    console.log('Running ...');
+    let [code, sourceMapBase64] = text.split(SOURCE_MAP_SPLIT);
 
     let offsetsCovered = Function(`
         let __OFFSETS_COVERED = [];
@@ -41,11 +38,16 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         
         return __OFFSETS_COVERED;
     `)();
+    
+    let sourceMapBuffer = new Buffer(sourceMapBase64, 'base64');
+    let sourceMapJson = sourceMapBuffer.toString('ascii');
 
     console.log('offsets covered:', offsetsCovered);
 
     console.log('all instrumented', findInstumentedItems(code));
-
+    
+    let sourceMapConsumer = await (new sourceMap.SourceMapConsumer(sourceMapJson as any));
+    console.log(sourceMapConsumer);
 }
 
 function findInstumentedItems(source) {
