@@ -22,7 +22,7 @@ for (let i = 0; i < 200; i++) {
 function test_line_statuses() {
     line_statuses({
         [currentFile]: {
-            ...empty,
+            // ...empty,
             10: 'uncovered',
             11: 'fail',
 
