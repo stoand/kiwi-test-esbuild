@@ -70,8 +70,11 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         return [start, end];
     }
 
-    // console.log(code.split('').splice(43).join(''));
-    console.log(code.split('').splice(262).join(''));
+    console.log(code.split('').splice(43).join(''));
+    console.log('--------------\n')
+    console.log(code)
+    // console.log(code.split('').splice(292).join(''));
+    // console.log(code.split('').splice(278).join(''));
     
     console.log(originalPositionFromOffset(262))
 
