@@ -9,3 +9,4 @@
 5. [WIP] Console.log
 6. [WIP] Open console, error output as seperate files
     Also use a diff library and syntax highlighting
+7. [WIP] Multicore execution
