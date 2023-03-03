@@ -11,7 +11,8 @@
     "test-once": "tsx src/tests.ts",
     "test-kakoune": "tsx watch src/kakoune_interface_tests.ts",
     "build": "node plugin.esbuild.mjs",
-    "example-minimal": "nodemon -e mjs,ts,tsx -x 'npm run build && (cd examples/minimal/ && npm run kiwi-esbuild-rebuild)'"
+    "example-minimal-custom-esbuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild examples/minimal/node_modules/.bin/",
+    "example-minimal": "npm run example-minimal-custom-esbuild && nodemon -e mjs,ts,tsx -x 'npm run build && (cd examples/minimal/ && npm run kiwi)'"
   },
   "repository": {
     "type": "git",

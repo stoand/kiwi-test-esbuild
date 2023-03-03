@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
-    "kiwi": "node --enable-source-maps kiwi-test.esbuild.mjs",
-    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && sleep 0.3 && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi"
+    "kiwi": "node --enable-source-maps kiwi-test.esbuild.mjs"
   },
   "author": "",
   "dependencies": {
     "esbuild": "^0.17.10",
     "kiwi-test-esbuild": "file:../../",
+    "react": "^18.2.0",
     "tsx": "^3.12.3"
   }
 }
-

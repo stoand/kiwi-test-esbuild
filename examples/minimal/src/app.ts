@@ -1,4 +1,6 @@
+// import React from 'react';
 
+// console.log(React);
 
 fail.now = 1
 
