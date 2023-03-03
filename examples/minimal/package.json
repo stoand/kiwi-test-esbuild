@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node --enable-source-maps kiwi-test.esbuild.mjs",
     "update-esbuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin",
-    "dev-super": "nodemon -e mjs,ts,tsx,go -w ../.. -w ~/esbuild/internal -x '(cd ../.. && npm run build) && npm run update-esbuild && npm test || echo'"
+    "dev-super": "npm run update-esbuild && nodemon -e mjs,ts,tsx -w ../.. -x '(cd ../.. && npm run build) && npm test || echo'"
   },
   "author": "",
   "dependencies": {
