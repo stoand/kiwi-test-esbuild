@@ -20,13 +20,13 @@ function logTime(label: string, start?: Date, end: Date = now()) {
 
 export async function runTests(results: Promise<esbuild.BuildResult>) {
     let { outputFiles, errors } = await results;
-    
-    if(errors.length > 0) {
+
+    if (errors.length > 0) {
         console.log('compile errors', errors);
-    
+
         return;
     }
-    
+
     let code = outputFiles[0].text;
 
     let start = now();
@@ -45,17 +45,21 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     `)();
 
     console.log(code)
-    
+
     console.log(code.length);
-    
+
+
     await fs.writeFile('/tmp/kiwi.js', code);
-    
+
     try {
-        Function('require', 'require("/tmp/kiwi.js")')(require)
+        Function('require', `
+            delete require.cache["/tmp/kiwi.js"];            
+            require("/tmp/kiwi.js");
+        `)(require)
     } catch (e) {
         console.log(e.stack);
     }
-    
+
     logTime('code run took', start);
 
     let statuses = {};
