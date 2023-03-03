@@ -31,18 +31,27 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     let start = now();
 
-    let positionsCovered = Function(`
-        let __POSITIONS_COVERED = [];
-    
-        function _I(startLine, startCol, endLine, endCol, file, expr = undefined) {
-            __POSITIONS_COVERED.push({file, startLine, startCol, endLine, endCol});
-            return expr;
-        }
-        
-        global._I = _I;
-        
-        return __POSITIONS_COVERED;
-    `)();
+    type Position = { fileIndex: number, startLine: number, startCol: number }
+    type PositionRange = Position & { endLine, endCol };
+
+    let positionsCovered: (Position | PositionRange)[] = [];
+    let fileIndices = {};
+
+    function _I(startLine, startCol, fileIndex, expr) {
+        positionsCovered.push({ fileIndex, startLine, startCol });
+        return expr;
+    }
+    function _IR(startLine, startCol, endLine, endCol, fileIndex) {
+        positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
+    }
+    function _IFILE_INDEX(fileName: string, index: number) {
+        fileIndices[index] = fileName;
+    }
+
+    global._I = _I;
+    global._IR = _IR;
+    global._IFILE_INDEX = _IFILE_INDEX;
+
 
     console.log(code)
 
@@ -62,11 +71,13 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     logTime('code run took', start);
 
+    let startKakouneOps = now();
+
     let statuses = {};
     let currentWorkingDir = process.cwd();
 
     for (let position of positionsCovered) {
-        let file = path.resolve(currentWorkingDir, position.file);
+        let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
         if (statuses[file] === undefined) {
             statuses[file] = {};
         }
@@ -78,6 +89,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     init_highlighters();
 
     line_statuses(statuses);
+
+    logTime('Kakoune Ops', startKakouneOps);
 }
 
 export let kiwiPlugin = {

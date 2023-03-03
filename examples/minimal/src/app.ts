@@ -2,6 +2,7 @@ import React from 'react';
 
 console.log(React);
 
+
 // fail.now = 1
 
 // this causes a build-time error
@@ -10,5 +11,8 @@ console.log(React);
 // }
 
 export function add(a: number, b: number): number {
+
+    // this should be highlighted
+
     return a + b;
 }
