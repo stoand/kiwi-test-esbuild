@@ -19,7 +19,14 @@ function logTime(label: string, start?: Date, end: Date = now()) {
 }
 
 export async function runTests(results: Promise<esbuild.BuildResult>) {
-    let { outputFiles } = await results;
+    let { outputFiles, errors } = await results;
+    
+    if(errors.length > 0) {
+        console.log('compile errors', errors);
+    
+        return;
+    }
+    
     let code = outputFiles[0].text;
 
     let start = now();
