@@ -1,7 +1,7 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { line_statuses } from './kakoune_interface';
+import { line_statuses, init_highlighters } from './kakoune_interface';
 
 function now() {
     return new Date();
@@ -22,6 +22,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let { outputFiles } = await results;
     let code = outputFiles[0].text;
 
+    let start = now();
+
     let positionsCovered = Function(`
         let __POSITIONS_COVERED = [];
     
@@ -38,10 +40,12 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     console.log(code)
 
     try {
-        eval(code);
+        Function(code)();
     } catch (e) {
         console.log(e.stack);
     }
+    
+    logTime('code run took', start);
 
     let statuses = {};
     let currentWorkingDir = process.cwd();
@@ -55,6 +59,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     }
 
     let currentFile = path.resolve(process.cwd(), 'src/app.ts');
+
+    init_highlighters();
 
     line_statuses(statuses);
 }
