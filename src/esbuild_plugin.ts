@@ -36,27 +36,34 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     let positionsCovered: (Position | PositionRange)[] = [];
     let fileIndices = {};
+    let positionsAvailable: (Position | PositionRange)[] = [];
 
-    function _I(startLine, startCol, fileIndex, expr) {
+    function _IE(startLine, startCol, fileIndex, expr) {
         positionsCovered.push({ fileIndex, startLine, startCol });
         return expr;
     }
-    function _IR(startLine, startCol, endLine, endCol, fileIndex) {
+    function _IB(startLine, startCol, endLine, endCol, fileIndex) {
         positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
     }
     function _IFILE_INDEX(fileName: string, index: number) {
         fileIndices[index] = fileName;
     }
 
-    global._I = _I;
-    global._IR = _IR;
-    global._IFILE_INDEX = _IFILE_INDEX;
+    function _IAVAILABLE(fileIndex: number, items: []) {
+        for (let item of items) {
+            positionsAvailable.push({fileIndex,
+                startLine: item[0], startCol: item[1], endLine: item[2], endCol: item[3]})
+        }
+    }
 
+    global._IE = _IE;
+    global._IB = _IB;
+    global._IFILE_INDEX = _IFILE_INDEX;
+    global._IAVAILABLE = _IAVAILABLE;
 
     console.log(code)
 
     console.log(code.length);
-
 
     await fs.writeFile('/tmp/kiwi.js', code);
 
@@ -70,6 +77,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     }
 
     logTime('code run took', start);
+    
+    console.log(positionsAvailable);
 
     let startKakouneOps = now();
 
