@@ -4,7 +4,7 @@
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
     "kiwi": "node --enable-source-maps kiwi-test.esbuild.mjs",
-    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi"
+    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && sleep 0.3 && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi"
   },
   "author": "",
   "dependencies": {

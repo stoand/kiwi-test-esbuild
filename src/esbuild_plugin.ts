@@ -40,9 +40,11 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     console.log(code)
     
     console.log(code.length);
-
+    
+    await fs.writeFile('/tmp/kiwi.js', code);
+    
     try {
-        Function(code)();
+        Function('require', 'require("/tmp/kiwi.js")')(require)
     } catch (e) {
         console.log(e.stack);
     }
