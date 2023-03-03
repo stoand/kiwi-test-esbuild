@@ -38,6 +38,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     `)();
 
     console.log(code)
+    
+    console.log(code.length);
 
     try {
         Function(code)();

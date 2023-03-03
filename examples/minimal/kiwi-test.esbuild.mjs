@@ -6,6 +6,7 @@ async function kiwiTest() {
         entryPoints: ['./src/tests.ts'],
         bundle: true,
         sourcemap: true,
+        sourcesContent: false,
         write: false,
         plugins: [kiwiPlugin],
     });
