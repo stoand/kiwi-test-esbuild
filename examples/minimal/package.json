@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
-    "kiwi": "node --enable-source-maps kiwi-test.esbuild.mjs"
+    "test": "node --enable-source-maps kiwi-test.esbuild.mjs",
+    "update-esbuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin",
+    "dev-super": "nodemon -e mjs,ts,tsx,go -w ../.. -w ~/esbuild/internal -x '(cd ../.. && npm run build) && npm run update-esbuild && npm test || echo'"
   },
   "author": "",
   "dependencies": {
