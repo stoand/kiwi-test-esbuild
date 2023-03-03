@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
-    "kiwi": "../../node_modules/.bin/tsx kiwi-test.ts",
-    "kiwi-watch-super": "../../node_modules/.bin/tsx  watch kiwi-test.ts",
-    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi-watch-super"
+    "kiwi": "node --enable-source-maps kiwi-test.esbuild.mjs",
+    "kiwi-esbuild-rebuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin/ && npm run kiwi"
   },
   "author": "",
   "dependencies": {

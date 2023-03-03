@@ -25,17 +25,23 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let positionsCovered = Function(`
         let __POSITIONS_COVERED = [];
     
-        function __INST(startLine, startCol, endLine, endCol, file, expr = undefined) {
+        function _I(startLine, startCol, endLine, endCol, file, expr = undefined) {
             __POSITIONS_COVERED.push({file, startLine, startCol, endLine, endCol});
             return expr;
         }
         
-        ${code}
+        global._I = _I;
         
         return __POSITIONS_COVERED;
     `)();
 
     console.log(code)
+
+    try {
+        eval(code);
+    } catch (e) {
+        console.log(e.stack);
+    }
 
     let statuses = {};
     let currentWorkingDir = process.cwd();
@@ -49,7 +55,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     }
 
     let currentFile = path.resolve(process.cwd(), 'src/app.ts');
-    
+
     line_statuses(statuses);
 }
 

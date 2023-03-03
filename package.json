@@ -2,14 +2,16 @@
   "name": "kiwi-test-esbuild",
   "version": "0.0.1",
   "description": "JS Realtime Inline Test Runner for Kakoune",
-  "main": "src/esbuild_plugin.ts",
+  "main": "dist/esbuild_plugin.js",
   "directories": {
     "example": "examples"
   },
   "scripts": {
     "test": "tsx watch src/tests.ts",
     "test-once": "tsx src/tests.ts",
-    "test-kakoune": "tsx watch src/kakoune_interface_tests.ts"
+    "test-kakoune": "tsx watch src/kakoune_interface_tests.ts",
+    "build": "node plugin.esbuild.mjs",
+    "example-minimal": "nodemon -e mjs,ts,tsx -x 'npm run build && (cd examples/minimal/ && npm run kiwi-esbuild-rebuild)'"
   },
   "repository": {
     "type": "git",
