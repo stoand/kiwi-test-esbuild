@@ -123,7 +123,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
         let test = global.__TESTS[testIndex];
         if (!fitOnly || test.priority) {
-            positionsCovered = [];
             let error = false;
             try {
                 await test.fn();
@@ -132,6 +131,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
                 thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
             }
             testResults.push({ testIndex, positionsCovered, error });
+            positionsCovered = [];
         }
     }
 
@@ -187,11 +187,15 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
             inactivePositionsJSON.delete(JSON.stringify(position));
         }
     }
+    
+    let someTestFailed = testResults.find(test => test.error);
 
     let inactivePositions: PositionCovered[] = [];
     inactivePositionsJSON.forEach((pos: string) => inactivePositions.push(JSON.parse(pos)));
 
     for (let test of testResults) {
+        let markAsFailed = (test.testIndex === -1 && someTestFailed) || test.error;
+    
         for (let position of test.positionsCovered) {
             let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
 
@@ -203,22 +207,32 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
                         if (isRange(inactivePosition)) {
                             if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
                                 lineInactive = true;
-                            }
-                        } else {
-                            if (line == inactivePosition.startLine) {
-                                lineInactive = true;
+                                
                             }
                         }
+                        // } else {
+                        //     if (line == inactivePosition.startLine) {
+                        //         // lineInactive = true;
+                                
+                        //     }
+                        // }
                     }
 
                     if (!lineInactive) {
-                        statuses[file][line] = 'success';
+                        if (statuses[file][line] !== 'fail') {
+                            statuses[file][line] = markAsFailed ? 'fail' : 'success';
+                        }
                     } else {
-                        statuses[file][line] = 'uncovered';
+                        // if (statuses[file][line] !== 'fail') {
+                        //     statuses[file][line] = 'uncovered';
+                        // }
+                        
                     }
                 }
             } else {
-                statuses[file][position.startLine] = 'success';
+                if (statuses[file][position.startLine] !== 'fail') {
+                    statuses[file][position.startLine] =  markAsFailed ? 'fail' : 'success';
+                }
             }
         }
     }

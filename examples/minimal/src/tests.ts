@@ -32,7 +32,16 @@ xit('this should not run', () => {
 
 it('focus only on this test', () => {
     console.log('asdf');
-    // add(2,3);
+    add(2,3);
+    
+    g.a = 1;
+    
+})
+
+it('focus only on this test', () => {
+    console.log('asdf');
+    add(2,3);
     
     // f.a = 1;
+    
 })
