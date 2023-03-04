@@ -9,7 +9,6 @@ function now() {
     return new Date();
 }
 
-// #SPC-runner.log_time
 function logTime(label: string, start?: Date, end: Date = now()) {
     if (process.env['KIWI_LOG_TIME']) {
         if (start) {
@@ -40,10 +39,14 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let fileIndices = {};
     let positionsAvailable: (Position | PositionRange)[] = [];
     let consoleLogs: { contents: any[], position: Position }[] = [];
+    let thrownErrors: { message: string, position: Position }[] = [];
 
-    function _IE(startLine, startCol, fileIndex, expr) {
+    function _IR(ignore, returnThis) {
+        return returnThis;
+    }
+    
+    function _IE(startLine, startCol, fileIndex) {
         positionsCovered.push({ fileIndex, startLine, startCol });
-        return expr;
     }
     function _IB(startLine, startCol, endLine, endCol, fileIndex) {
         positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
@@ -66,6 +69,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         originalConsoleLog(...contents);
     }
 
+    global._IR = _IR;
     global._IE = _IE;
     global._IB = _IB;
     global._IFILE_INDEX = _IFILE_INDEX;
@@ -83,6 +87,9 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             require("/tmp/kiwi.js");
         `)(require)
     } catch (e) {
+        thrownErrors.push({ message: e.message, position: positionsCovered[positionsCovered.length - 1] });
+        originalConsoleLog(positionsCovered);
+        
         originalConsoleLog(e.stack);
     }
 
@@ -107,11 +114,13 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             try {
             await test.fn();
             } catch(e) {
-                originalConsoleLog('test error', e);
+                thrownErrors.push({ message: e.message, position: positionsCovered[positionsCovered.length - 1] });
             }
             testPositions.push({ testIndex, positionsCovered });
         }
     }
+    
+    originalConsoleLog('thrown', thrownErrors, fileIndices[thrownErrors[0].position.fileIndex]);
     
     // originalConsoleLog(testPositions);
 
@@ -137,6 +146,11 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
         notifications[file][log.position.startLine + 1] = { text: log.contents.join(' '), color: 'normal' };
+    }
+    
+    for (let error of thrownErrors) {
+        let file = path.resolve(currentWorkingDir, fileIndices[error.position.fileIndex] || '');
+        notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
     }
 
     init_highlighters();
