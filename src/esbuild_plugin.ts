@@ -201,7 +201,7 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
 
                     for (let inactivePosition of inactivePositions) {
                         if (isRange(inactivePosition)) {
-                            if (line >= inactivePosition.startLine && line <= inactivePosition.endLine) {
+                            if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
                                 lineInactive = true;
                             }
                         } else {
