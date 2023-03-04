@@ -36,17 +36,23 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     type PositionRange = Position & { endLine, endCol };
 
     let positionsCovered: (Position | PositionRange)[] = [];
+    let prevPositionsCovered: (Position | PositionRange)[] = [];
+    
     let fileIndices = {};
     let positionsAvailable: (Position | PositionRange)[] = [];
     let consoleLogs: { contents: any[], position: Position }[] = [];
     let thrownErrors: { message: string, position: Position }[] = [];
 
-    function _IR(ignore, returnThis) {
+    // Executed after the instrumented expression
+    function _IR(nextPos, returnThis) {
+        positionsCovered.push(nextPos);
         return returnThis;
     }
-    
+    // Executed before the instrumented expression
     function _IE(startLine, startCol, fileIndex) {
-        positionsCovered.push({ fileIndex, startLine, startCol });
+        let pos = { fileIndex, startLine, startCol };
+        prevPositionsCovered.push(pos);
+        return pos;
     }
     function _IB(startLine, startCol, endLine, endCol, fileIndex) {
         positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
@@ -87,49 +93,29 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             require("/tmp/kiwi.js");
         `)(require)
     } catch (e) {
-        thrownErrors.push({ message: e.message, position: positionsCovered[positionsCovered.length - 1] });
+        thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
         originalConsoleLog(positionsCovered);
-        
+
         originalConsoleLog(e.stack);
     }
 
     logTime('code run took', start);
 
     // originalConsoleLog(consoleLogs);
-    
+
     let startTestRuns = now();
-    
+
     let testPositions = [];
-    
+
     testPositions.push({ testIndex: -1, positionsCovered });
     positionsCovered = [];
-    
+
     originalConsoleLog('tests', global.__TESTS);
-       
-    let fitOnly = global.__TESTS.find(test => test.priority);
-    for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
-        let test = global.__TESTS[testIndex];
-        if (!fitOnly || test.priority) {
-            positionsCovered = [];
-            try {
-            await test.fn();
-            } catch(e) {
-                thrownErrors.push({ message: e.message, position: positionsCovered[positionsCovered.length - 1] });
-            }
-            testPositions.push({ testIndex, positionsCovered });
-        }
-    }
-    
-    originalConsoleLog('thrown', thrownErrors, fileIndices[thrownErrors[0].position.fileIndex]);
-    
-    // originalConsoleLog(testPositions);
-
-    logTime('tests took', startTestRuns);
-
-    let startKakouneOps = now();
+    originalConsoleLog('pos-covered', positionsCovered);
 
     let statuses = {};
     let notifications = {};
+
     let currentWorkingDir = process.cwd();
 
     for (let localFile of Object.values(fileIndices) as string[]) {
@@ -138,20 +124,44 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         notifications[file] = {};
     }
 
-    for (let position of positionsCovered) {
-        let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
-        statuses[file][position.startLine] = 'success';
+    let fitOnly = global.__TESTS.find(test => test.priority);
+    for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
+        let test = global.__TESTS[testIndex];
+        if (!fitOnly || test.priority) {
+            positionsCovered = [];
+            try {
+                await test.fn();
+            } catch (e) {
+                thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
+            }
+            testPositions.push({ testIndex, positionsCovered });
+        }
+
+
+        for (let position of positionsCovered) {
+            let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
+            statuses[file][position.startLine] = 'success';
+        }
     }
+
+    originalConsoleLog('thrown', thrownErrors);
+
+
+    // originalConsoleLog(testPositions);
+
+    logTime('tests took', startTestRuns);
 
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
         notifications[file][log.position.startLine + 1] = { text: log.contents.join(' '), color: 'normal' };
     }
-    
+
     for (let error of thrownErrors) {
         let file = path.resolve(currentWorkingDir, fileIndices[error.position.fileIndex] || '');
         notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
     }
+
+    let startKakouneOps = now();
 
     init_highlighters();
 

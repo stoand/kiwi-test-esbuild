@@ -3,15 +3,17 @@ import { it, xit, fit } from 'kiwi-test-esbuild';
 
 g.a = 1;
     
+    
 
 it('can add', () => {
     console.log('add result = ', add(2, 3));
 });
 
 it('supports async', async () => {
-    console.log('add result = ', add(0, 3));
+    console.log('add result = ' + add(0, 3));
+    
     await new Promise((resolve, reject) => {
-        setTimeout(() => resolve(undefined), 300);
+        setTimeout(() => resolve(undefined), 30);
     });
 });
 
