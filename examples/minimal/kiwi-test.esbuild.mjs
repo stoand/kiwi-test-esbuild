@@ -1,5 +1,5 @@
 import esbuild from 'esbuild';
-import { kiwiPlugin } from 'kiwi-test-esbuild';
+import { kiwiPlugin } from 'kiwi-test-esbuild/plugin.js';
 
 async function kiwiTest() {
     let context = await esbuild.context({

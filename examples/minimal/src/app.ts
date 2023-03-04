@@ -1,7 +1,11 @@
 import React from 'react';
+import { describe, it } from 'kiwi-test-esbuild';
 
 console.log(React);
 
+let a: number = describe();
+
+// console.log();
 
 // fail.now = 1
 

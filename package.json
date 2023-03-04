@@ -2,7 +2,7 @@
   "name": "kiwi-test-esbuild",
   "version": "0.0.1",
   "description": "JS Realtime Inline Test Runner for Kakoune",
-  "main": "dist/esbuild_plugin.js",
+  "main": "src/runtime.ts",
   "directories": {
     "example": "examples"
   },

@@ -83,7 +83,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             require("/tmp/kiwi.js");
         `)(require)
     } catch (e) {
-        console.log(e.stack);
+        originalConsoleLog(e.stack);
     }
 
     logTime('code run took', start);
