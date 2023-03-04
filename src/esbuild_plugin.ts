@@ -1,7 +1,7 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { line_statuses, init_highlighters } from './kakoune_interface';
+import { line_statuses, line_notifications, init_highlighters } from './kakoune_interface';
 
 function now() {
     return new Date();
@@ -37,6 +37,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let positionsCovered: (Position | PositionRange)[] = [];
     let fileIndices = {};
     let positionsAvailable: (Position | PositionRange)[] = [];
+    let consoleLogs: { contents: any[], position: Position }[] = [];
 
     function _IE(startLine, startCol, fileIndex, expr) {
         positionsCovered.push({ fileIndex, startLine, startCol });
@@ -51,9 +52,17 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     function _IAVAILABLE(fileIndex: number, items: []) {
         for (let item of items) {
-            positionsAvailable.push({fileIndex,
-                startLine: item[0], startCol: item[1], endLine: item[2], endCol: item[3]})
+            positionsAvailable.push({
+                fileIndex,
+                startLine: item[0], startCol: item[1], endLine: item[2], endCol: item[3]
+            })
         }
+    }
+
+    let originalConsoleLog = console.log;
+    console.log = function(...contents) {
+        consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1]});
+        originalConsoleLog(...contents);
     }
 
     global._IE = _IE;
@@ -61,9 +70,9 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     global._IFILE_INDEX = _IFILE_INDEX;
     global._IAVAILABLE = _IAVAILABLE;
 
-    console.log(code)
+    originalConsoleLog(code)
 
-    console.log(code.length);
+    originalConsoleLog(code.length);
 
     await fs.writeFile('/tmp/kiwi.js', code);
 
@@ -78,11 +87,14 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     logTime('code run took', start);
     
-    console.log(positionsAvailable);
+    originalConsoleLog(consoleLogs);
+
+    // console.log(positionsAvailable);
 
     let startKakouneOps = now();
 
     let statuses = {};
+    let notifications = {};
     let currentWorkingDir = process.cwd();
 
     for (let position of positionsCovered) {
@@ -92,12 +104,20 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         }
         statuses[file][position.startLine] = 'success';
     }
-
-    let currentFile = path.resolve(process.cwd(), 'src/app.ts');
+    
+    for (let log of consoleLogs) {
+        let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
+        if (notifications[file] === undefined) {
+            notifications[file] = {};
+        }
+        notifications[file][log.position.startLine + 1] = { text: log.contents.join(' '), color: 'normal' };
+    }
 
     init_highlighters();
 
     line_statuses(statuses);
+    
+    line_notifications(notifications);
 
     logTime('Kakoune Ops', startKakouneOps);
 }

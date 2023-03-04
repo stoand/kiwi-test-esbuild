@@ -6,7 +6,7 @@
 2. [TODO] Copy over the test runtime
 3. [TODO] Calculation of what lines were affected by failing or succeeding tests
 4. [TODO] Kakoune test listing
-5. [TODO] Console.log
+5. [DONE] Console.log
 6. [TODO] Open console, error output as seperate files
     Also use a diff library and syntax highlighting
 7. [TODO] Multicore execution
