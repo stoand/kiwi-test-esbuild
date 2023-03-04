@@ -42,7 +42,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let prevPositionsCovered: PositionCovered[] = [];
 
     let fileIndices = {};
-    let positionsAvailable: (Position | PositionRange)[] = [];
+    let positionsAvailable: PositionCovered[] = [];
     let consoleLogs: { contents: any[], position: Position }[] = [];
     let thrownErrors: { message: string, position: Position }[] = [];
 
@@ -145,7 +145,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         notifications[file] = {};
     }
 
-    computeLineStatuses(statuses, testResults, fileIndices);
+    computeLineStatuses(statuses, testResults, fileIndices, positionsAvailable);
 
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
@@ -169,17 +169,56 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     logTime('Kakoune Ops', startKakouneOps);
 }
 
-function computeLineStatuses(statuses, testResults: TestResult[], fileIndices) {
+function isRange(pos: Position): pos is PositionRange {
+    return 'endCol' in pos;
+}
+
+function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, positionsAvailable: PositionCovered[]) {
     let currentWorkingDir = process.cwd();
+
+    let inactivePositionsJSON = new Set();
+
+    for (let position of positionsAvailable) {
+        inactivePositionsJSON.add(JSON.stringify(position));
+    }
+
+    for (let test of testResults) {
+        for (let position of test.positionsCovered) {
+            inactivePositionsJSON.delete(JSON.stringify(position));
+        }
+    }
+
+    let inactivePositions: PositionCovered[] = [];
+    inactivePositionsJSON.forEach((pos: string) => inactivePositions.push(JSON.parse(pos)));
 
     for (let test of testResults) {
         for (let position of test.positionsCovered) {
             let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
 
-            if ('endLine' in position) {
+            if (isRange(position)) {
                 for (let line = position.startLine; line <= position.endLine; line++) {
-                    statuses[file][line] = 'success';
+                    let lineInactive = false;
+
+                    for (let inactivePosition of inactivePositions) {
+                        if (isRange(inactivePosition)) {
+                            if (line >= inactivePosition.startLine && line <= inactivePosition.endLine) {
+                                lineInactive = true;
+                            }
+                        } else {
+                            if (line == inactivePosition.startLine) {
+                                lineInactive = true;
+                            }
+                        }
+                    }
+
+                    if (!lineInactive) {
+                        statuses[file][line] = 'success';
+                    } else {
+                        statuses[file][line] = 'uncovered';
+                    }
                 }
+            } else {
+                statuses[file][position.startLine] = 'success';
             }
         }
     }

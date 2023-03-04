@@ -10,7 +10,9 @@ it('can add', () => {
     console.log('add result = ', add(2, 3));
     
     if (false) {
-        console.log('ignore me'); 
+        console.log('ignore');
+        
+        console.log('us');
     }
 });
 
