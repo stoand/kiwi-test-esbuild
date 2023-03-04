@@ -1,9 +1,7 @@
 import React from 'react';
-import { describe, it } from 'kiwi-test-esbuild';
 
-console.log(React);
+console.log(React.version);
 
-let a: number = describe();
 
 // console.log();
 

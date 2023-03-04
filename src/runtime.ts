@@ -1,7 +1,13 @@
-export function describe(): number {
-    return 1;
+let tests: {priority: boolean, label: string, fn: Function}[] = [];
+
+export async function it(label: string, fn: Function) {
+    tests.push({priority: false, label, fn});
 }
 
-export function it(a: Function) {
-    
+export async function xit(label: string, fn: Function) { }
+
+export async function fit(label: string, fn: Function) {
+    tests.push({priority: true, label, fn});
 }
+
+global.__TESTS = tests;

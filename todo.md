@@ -3,7 +3,7 @@
 0. [DONE] Every individual `_I` annotation should use a file index instead of the full file path to save space
 1. [DONE] The js_printer should accumulate a list of all instrumented ranges and save these at the end.
     This will enable the inference of what block/expr were not called
-2. [TODO] Copy over the test runtime
+2. [DONE] Copy over the test runtime
 3. [TODO] Calculation of what lines were affected by failing or succeeding tests
 4. [TODO] Kakoune test listing
 5. [DONE] Console.log

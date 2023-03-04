@@ -88,7 +88,34 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     logTime('code run took', start);
 
-    originalConsoleLog(consoleLogs);
+    // originalConsoleLog(consoleLogs);
+    
+    let startTestRuns = now();
+    
+    let testPositions = [];
+    
+    testPositions.push({ testIndex: -1, positionsCovered });
+    positionsCovered = [];
+    
+    originalConsoleLog('tests', global.__TESTS);
+       
+    let fitOnly = global.__TESTS.find(test => test.priority);
+    for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
+        let test = global.__TESTS[testIndex];
+        if (!fitOnly || test.priority) {
+            positionsCovered = [];
+            try {
+            await test.fn();
+            } catch(e) {
+                originalConsoleLog('test error', e);
+            }
+            testPositions.push({ testIndex, positionsCovered });
+        }
+    }
+    
+    // originalConsoleLog(testPositions);
+
+    logTime('tests took', startTestRuns);
 
     let startKakouneOps = now();
 
