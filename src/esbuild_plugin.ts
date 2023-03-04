@@ -3,6 +3,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { line_statuses, line_notifications, init_highlighters } from './kakoune_interface';
 
+let originalConsoleLog = console.log;
+
 function now() {
     return new Date();
 }
@@ -11,9 +13,9 @@ function now() {
 function logTime(label: string, start?: Date, end: Date = now()) {
     if (process.env['KIWI_LOG_TIME']) {
         if (start) {
-            console.log(label, end.getTime() - start.getTime(), 'ms');
+            originalConsoleLog(label, end.getTime() - start.getTime(), 'ms');
         } else {
-            console.log(label);
+            originalConsoleLog(label);
         }
     }
 }
@@ -59,9 +61,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         }
     }
 
-    let originalConsoleLog = console.log;
     console.log = function(...contents) {
-        consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1]});
+        consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1] });
         originalConsoleLog(...contents);
     }
 
@@ -86,10 +87,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     }
 
     logTime('code run took', start);
-    
-    originalConsoleLog(consoleLogs);
 
-    // console.log(positionsAvailable);
+    originalConsoleLog(consoleLogs);
 
     let startKakouneOps = now();
 
@@ -97,26 +96,26 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let notifications = {};
     let currentWorkingDir = process.cwd();
 
+    for (let localFile of Object.values(fileIndices) as string[]) {
+        let file = path.resolve(currentWorkingDir, localFile);
+        statuses[file] = {};
+        notifications[file] = {};
+    }
+
     for (let position of positionsCovered) {
         let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
-        if (statuses[file] === undefined) {
-            statuses[file] = {};
-        }
         statuses[file][position.startLine] = 'success';
     }
-    
+
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
-        if (notifications[file] === undefined) {
-            notifications[file] = {};
-        }
         notifications[file][log.position.startLine + 1] = { text: log.contents.join(' '), color: 'normal' };
     }
 
     init_highlighters();
 
     line_statuses(statuses);
-    
+
     line_notifications(notifications);
 
     logTime('Kakoune Ops', startKakouneOps);
