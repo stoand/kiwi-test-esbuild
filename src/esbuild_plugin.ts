@@ -26,6 +26,9 @@ function logTime(label: string, start?: Date, end: Date = now()) {
 }
 
 export async function runTests(results: Promise<esbuild.BuildResult>) {
+
+    originalConsoleLog('New run ---------------------');
+
     let { outputFiles, errors } = await results;
 
     let start = now();
@@ -76,7 +79,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         console.log = function(...contents) {
             consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1] });
-            originalConsoleLog(...contents);
+            // originalConsoleLog(...contents);
         }
 
         global._IR = _IR;
@@ -84,25 +87,24 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         global._IB = _IB;
         global._IFILE_INDEX = _IFILE_INDEX;
         global._IAVAILABLE = _IAVAILABLE;
-
+        
         // originalConsoleLog(code)
 
         // originalConsoleLog(code.length);
 
-        await fs.writeFile('/tmp/kiwi.js', code);
+        await fs.writeFile('/tmp/__kiwi.js', code);
 
         let preTestError = false;
 
         try {
             Function('require', `
-            delete require.cache["/tmp/kiwi.js"];            
-            require("/tmp/kiwi.js");
+            delete require.cache["/tmp/__kiwi.js"];            
+            require("/tmp/__kiwi.js");
         `)(require)
         } catch (e) {
             thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
-            originalConsoleLog(positionsCovered);
 
-            originalConsoleLog(e.stack);
+            originalConsoleLog(e);
             preTestError = true;
         }
 
@@ -116,6 +118,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         positionsCovered = [];
 
         let fitOnly = global.__TESTS.find(test => test.priority);
+
         for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
             let test = global.__TESTS[testIndex];
             if (!fitOnly || test.priority) {
@@ -150,8 +153,13 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         statuses[file] = {};
         notifications[file] = {};
     }
-
+    
+    let startCompute = now();
+    
+    // TODO optimize
     computeLineStatuses(statuses, testResults, fileIndices, positionsAvailable);
+    
+    logTime('Compute line statuses', startCompute);
 
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');

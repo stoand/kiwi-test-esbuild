@@ -15,3 +15,4 @@
     Also use a diff library and syntax highlighting
 7. [TODO] Multicore execution
 8. [TODO] partial line coverage
+9. [TODO] optimize computeLineStatuses

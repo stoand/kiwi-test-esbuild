@@ -1,0 +1,20 @@
+{
+  "name": "bench",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bench.esbuild.mjs",
+  "scripts": {
+    "test": "node --enable-source-maps bench.esbuild.mjs",
+    "update-esbuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin",
+    "dev-super": "nodemon -e mjs,ts,tsx,go -w .. -w ~/esbuild/internal -x 'npm run update-esbuild && (cd .. && npm run build) && npm test || echo'"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/react": "^18.0.28",
+    "esbuild": "0.17.10",
+    "kiwi-test-esbuild": "file:../",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

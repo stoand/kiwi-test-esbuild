@@ -4,7 +4,6 @@ import { it, xit, fit } from 'kiwi-test-esbuild';
 // g.a = 1;
     
 console.log('asdf');
-   
 
 it('can add', () => {
 
@@ -34,7 +33,7 @@ it('focus only on this test', () => {
     console.log('asdf');
     add(2,3);
     
-    === 1
+    // === 1
     // 
     
     // g.a = 1;
