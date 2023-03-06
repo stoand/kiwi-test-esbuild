@@ -4,13 +4,13 @@ import { it, xit, fit } from 'kiwi-test-esbuild';
 // g.a = 1;
     
 console.log('asdf');
-    
+   
 
 it('can add', () => {
 
     console.log('add result = ', add(2, 3));
     
-    if (false) {
+    if (true) {
         console.log('ignore');
         
         console.log('us');
@@ -34,7 +34,10 @@ it('focus only on this test', () => {
     console.log('asdf');
     add(2,3);
     
-    g.a = 1;
+    === 1
+    // 
+    
+    // g.a = 1;
     
 })
 
@@ -42,6 +45,7 @@ it('focus only on this test', () => {
     console.log('asdf');
     add(2,3);
     
-    // f.a = 1;
+    // throw new Error('asd3234f)';
+    f.a = 1;
     
 })

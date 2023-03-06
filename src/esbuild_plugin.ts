@@ -28,14 +28,6 @@ function logTime(label: string, start?: Date, end: Date = now()) {
 export async function runTests(results: Promise<esbuild.BuildResult>) {
     let { outputFiles, errors } = await results;
 
-    if (errors.length > 0) {
-        console.log('compile errors', errors);
-
-        return;
-    }
-
-    let code = outputFiles[0].text;
-
     let start = now();
 
     let positionsCovered: PositionCovered[] = [];
@@ -46,98 +38,112 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let consoleLogs: { contents: any[], position: Position }[] = [];
     let thrownErrors: { message: string, position: Position }[] = [];
 
-    // Executed after the instrumented expression
-    function _IR(nextPos, returnThis) {
-        positionsCovered.push(nextPos);
-        return returnThis;
-    }
-    // Executed before the instrumented expression
-    function _IE(startLine, startCol, fileIndex) {
-        let pos = { fileIndex, startLine, startCol };
-        prevPositionsCovered.push(pos);
-        return pos;
-    }
-    // Instrument block
-    function _IB(startLine, startCol, endLine, endCol, fileIndex) {
-        positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
-    }
-    function _IFILE_INDEX(fileName: string, index: number) {
-        fileIndices[index] = fileName;
-    }
-    function _IAVAILABLE(fileIndex: number, items: []) {
-        for (let item of items) {
-            positionsAvailable.push({
-                fileIndex,
-                startLine: item[0], startCol: item[1], endLine: item[2], endCol: item[3]
-            })
-        }
-    }
-
-    console.log = function(...contents) {
-        consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1] });
-        originalConsoleLog(...contents);
-    }
-
-    global._IR = _IR;
-    global._IE = _IE;
-    global._IB = _IB;
-    global._IFILE_INDEX = _IFILE_INDEX;
-    global._IAVAILABLE = _IAVAILABLE;
-
-    originalConsoleLog(code)
-
-    originalConsoleLog(code.length);
-
-    await fs.writeFile('/tmp/kiwi.js', code);
-
-    let preTestError = false;
-
-    try {
-        Function('require', `
-            delete require.cache["/tmp/kiwi.js"];            
-            require("/tmp/kiwi.js");
-        `)(require)
-    } catch (e) {
-        thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
-        originalConsoleLog(positionsCovered);
-
-        originalConsoleLog(e.stack);
-        preTestError = true;
-    }
-
-    logTime('code run took', start);
-
-    // originalConsoleLog(consoleLogs);
-
-    let startTestRuns = now();
-
     let statuses = {};
     let notifications = {};
 
     let testResults: TestResult[] = [];
 
-    testResults.push({ testIndex: -1, positionsCovered, error: preTestError });
-    positionsCovered = [];
-
-    let fitOnly = global.__TESTS.find(test => test.priority);
-    for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
-        let test = global.__TESTS[testIndex];
-        if (!fitOnly || test.priority) {
-            let error = false;
-            try {
-                await test.fn();
-            } catch (e) {
-                error = true;
-                thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
-            }
-            testResults.push({ testIndex, positionsCovered, error });
-            positionsCovered = [];
-        }
-    }
-
-    logTime('tests took', startTestRuns);
-
     let currentWorkingDir = process.cwd();
+
+    if (errors.length == 0) {
+        let code = outputFiles[0].text;
+        // Executed after the instrumented expression
+        function _IR(nextPos, returnThis) {
+            positionsCovered.push(nextPos);
+            return returnThis;
+        }
+        // Executed before the instrumented expression
+        function _IE(startLine, startCol, fileIndex) {
+            let pos = { fileIndex, startLine, startCol };
+            prevPositionsCovered.push(pos);
+            return pos;
+        }
+        // Instrument block
+        function _IB(startLine, startCol, endLine, endCol, fileIndex) {
+            positionsCovered.push({ fileIndex, startLine, startCol, endLine, endCol });
+        }
+        function _IFILE_INDEX(fileName: string, index: number) {
+            fileIndices[index] = fileName;
+        }
+        function _IAVAILABLE(fileIndex: number, items: []) {
+            for (let item of items) {
+                positionsAvailable.push({
+                    fileIndex,
+                    startLine: item[0], startCol: item[1], endLine: item[2], endCol: item[3]
+                })
+            }
+        }
+
+        console.log = function(...contents) {
+            consoleLogs.push({ contents, position: positionsCovered[positionsCovered.length - 1] });
+            originalConsoleLog(...contents);
+        }
+
+        global._IR = _IR;
+        global._IE = _IE;
+        global._IB = _IB;
+        global._IFILE_INDEX = _IFILE_INDEX;
+        global._IAVAILABLE = _IAVAILABLE;
+
+        // originalConsoleLog(code)
+
+        // originalConsoleLog(code.length);
+
+        await fs.writeFile('/tmp/kiwi.js', code);
+
+        let preTestError = false;
+
+        try {
+            Function('require', `
+            delete require.cache["/tmp/kiwi.js"];            
+            require("/tmp/kiwi.js");
+        `)(require)
+        } catch (e) {
+            thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
+            originalConsoleLog(positionsCovered);
+
+            originalConsoleLog(e.stack);
+            preTestError = true;
+        }
+
+        logTime('code run took', start);
+
+        // originalConsoleLog(consoleLogs);
+
+        let startTestRuns = now();
+
+        testResults.push({ testIndex: -1, positionsCovered, error: preTestError });
+        positionsCovered = [];
+
+        let fitOnly = global.__TESTS.find(test => test.priority);
+        for (let testIndex = 0; testIndex < global.__TESTS.length; testIndex++) {
+            let test = global.__TESTS[testIndex];
+            if (!fitOnly || test.priority) {
+                let error = false;
+                try {
+                    await test.fn();
+                } catch (e) {
+                    error = true;
+                    thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
+                }
+                testResults.push({ testIndex, positionsCovered, error });
+                positionsCovered = [];
+            }
+        }
+
+        logTime('tests took', startTestRuns);
+
+    } else {
+
+        console.error(errors);
+
+        let error = errors[0];
+        fileIndices[0] = error.location.file;
+        thrownErrors.push({
+            message: error.text,
+            position: { fileIndex: 0, startLine: error.location.line - 1, startCol: error.location.column }
+        });
+    }
 
     for (let localFile of Object.values(fileIndices) as string[]) {
         let file = path.resolve(currentWorkingDir, localFile);
@@ -187,7 +193,7 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
             inactivePositionsJSON.delete(JSON.stringify(position));
         }
     }
-    
+
     let someTestFailed = testResults.find(test => test.error);
 
     let inactivePositions: PositionCovered[] = [];
@@ -195,7 +201,7 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
 
     for (let test of testResults) {
         let markAsFailed = (test.testIndex === -1 && someTestFailed) || test.error;
-    
+
         for (let position of test.positionsCovered) {
             let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
 
@@ -207,13 +213,13 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
                         if (isRange(inactivePosition)) {
                             if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
                                 lineInactive = true;
-                                
+
                             }
                         }
                         // } else {
                         //     if (line == inactivePosition.startLine) {
                         //         // lineInactive = true;
-                                
+
                         //     }
                         // }
                     }
@@ -226,12 +232,12 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
                         // if (statuses[file][line] !== 'fail') {
                         //     statuses[file][line] = 'uncovered';
                         // }
-                        
+
                     }
                 }
             } else {
                 if (statuses[file][position.startLine] !== 'fail') {
-                    statuses[file][position.startLine] =  markAsFailed ? 'fail' : 'success';
+                    statuses[file][position.startLine] = markAsFailed ? 'fail' : 'success';
                 }
             }
         }
