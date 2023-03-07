@@ -16,3 +16,6 @@
 7. [TODO] Multicore execution
 8. [TODO] partial line coverage
 9. [TODO] optimize computeLineStatuses
+10. [TODO] implement a reverse editor communication scheme
+    The client should call the runner
+
