@@ -147,6 +147,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             position: { fileIndex: 0, startLine: error.location.line - 1, startCol: error.location.column }
         });
     }
+        
+    console.log = originalConsoleLog;
 
     for (let localFile of Object.values(fileIndices) as string[]) {
         let file = path.resolve(currentWorkingDir, localFile);
@@ -189,18 +191,25 @@ function isRange(pos: Position): pos is PositionRange {
 
 function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, positionsAvailable: PositionCovered[]) {
     let currentWorkingDir = process.cwd();
+    
+    let inactivePositionScan = {};
+    let filePathCache = {};
 
     let inactivePositionsJSON = new Set();
 
     for (let position of positionsAvailable) {
-        inactivePositionsJSON.add(JSON.stringify(position));
-    }
-
-    for (let test of testResults) {
-        for (let position of test.positionsCovered) {
-            inactivePositionsJSON.delete(JSON.stringify(position));
+        if (!filePathCache[position.fileIndex]) {
+           filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || ''); 
         }
+        
+        statuses[filePathCache[position.fileIndex]][position.startLine] = 'success';
     }
+    
+    //     for (let i = 0 ; i< 30000; i++)
+    // statuses['/home/andreas/kiwi-test-esbuild/bench/generated_tests.js'][i] = 'fail';
+    
+    
+    return;
 
     let someTestFailed = testResults.find(test => test.error);
 

@@ -1,5 +1,5 @@
 export function genBenchTests() {
-    let items = 100;
+    let items = 10000;
 
     let src = `
         import React from 'react';
