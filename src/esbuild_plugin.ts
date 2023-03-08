@@ -87,11 +87,18 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         global._IB = _IB;
         global._IFILE_INDEX = _IFILE_INDEX;
         global._IAVAILABLE = _IAVAILABLE;
-        
+
         // originalConsoleLog(code)
 
         // originalConsoleLog(code.length);
 
+        let codeInFunc = `
+            global.__SETUP = function() {
+                ${code}
+            }
+        `;
+
+        // await fs.writeFile('/tmp/__kiwi.js', codeInFunc);
         await fs.writeFile('/tmp/__kiwi.js', code);
 
         let preTestError = false;
@@ -100,7 +107,14 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             Function('require', `
             delete require.cache["/tmp/__kiwi.js"];            
             require("/tmp/__kiwi.js");
-        `)(require)
+            `)(require);
+
+            logTime('code load took', start);
+
+            // let beforeSetup = now();
+            // global.__SETUP();
+
+            // logTime('code setup took', beforeSetup);
         } catch (e) {
             thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
 
@@ -108,7 +122,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             preTestError = true;
         }
 
-        logTime('code run took', start);
 
         // originalConsoleLog(consoleLogs);
 
@@ -147,7 +160,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             position: { fileIndex: 0, startLine: error.location.line - 1, startCol: error.location.column }
         });
     }
-        
+
     console.log = originalConsoleLog;
 
     for (let localFile of Object.values(fileIndices) as string[]) {
@@ -155,12 +168,12 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         statuses[file] = {};
         notifications[file] = {};
     }
-    
+
     let startCompute = now();
-    
+
     // TODO optimize
     computeLineStatuses(statuses, testResults, fileIndices, positionsAvailable);
-    
+
     logTime('Compute line statuses', startCompute);
 
     for (let log of consoleLogs) {
@@ -191,7 +204,7 @@ function isRange(pos: Position): pos is PositionRange {
 
 function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, positionsAvailable: PositionCovered[]) {
     let currentWorkingDir = process.cwd();
-    
+
     let inactivePositionScan = {};
     let filePathCache = {};
 
@@ -199,16 +212,16 @@ function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, p
 
     for (let position of positionsAvailable) {
         if (!filePathCache[position.fileIndex]) {
-           filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || ''); 
+            filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
         }
-        
+
         statuses[filePathCache[position.fileIndex]][position.startLine] = 'success';
     }
-    
+
     //     for (let i = 0 ; i< 30000; i++)
     // statuses['/home/andreas/kiwi-test-esbuild/bench/generated_tests.js'][i] = 'fail';
-    
-    
+
+
     return;
 
     let someTestFailed = testResults.find(test => test.error);
