@@ -5,11 +5,13 @@ import { it, xit, fit } from 'kiwi-test-esbuild';
     
 console.log('asdf');
 
+let asdf = {};
+
 it('can add', () => {
 
     console.log('add result = ', add(2, 3));
     
-    if (true) {
+    if (false) {
         console.log('ignore');
         
         console.log('us');

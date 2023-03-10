@@ -1,7 +1,7 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { line_statuses, line_notifications, init_highlighters } from './kakoune_interface';
+import { line_statuses, line_notifications, init_highlighters, FileStatuses } from './kakoune_interface';
 
 let originalConsoleLog = console.log;
 
@@ -202,77 +202,84 @@ function isRange(pos: Position): pos is PositionRange {
     return 'endCol' in pos;
 }
 
-function computeLineStatuses(statuses, testResults: TestResult[], fileIndices, positionsAvailable: PositionCovered[]) {
+function computeLineStatuses(statuses: FileStatuses, testResults: TestResult[], fileIndices: any,
+    positionsAvailable: PositionCovered[]) {
+
     let currentWorkingDir = process.cwd();
 
-    let inactivePositionScan = {};
     let filePathCache = {};
-
-    let inactivePositionsJSON = new Set();
 
     for (let position of positionsAvailable) {
         if (!filePathCache[position.fileIndex]) {
             filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
         }
 
-        statuses[filePathCache[position.fileIndex]][position.startLine] = 'success';
+        statuses[filePathCache[position.fileIndex]][position.startLine] = 'uncovered';
     }
 
-    //     for (let i = 0 ; i< 30000; i++)
-    // statuses['/home/andreas/kiwi-test-esbuild/bench/generated_tests.js'][i] = 'fail';
-
-
-    return;
-
     let someTestFailed = testResults.find(test => test.error);
-
-    let inactivePositions: PositionCovered[] = [];
-    inactivePositionsJSON.forEach((pos: string) => inactivePositions.push(JSON.parse(pos)));
 
     for (let test of testResults) {
         let markAsFailed = (test.testIndex === -1 && someTestFailed) || test.error;
 
         for (let position of test.positionsCovered) {
-            let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
-
-            if (isRange(position)) {
-                for (let line = position.startLine; line <= position.endLine; line++) {
-                    let lineInactive = false;
-
-                    for (let inactivePosition of inactivePositions) {
-                        if (isRange(inactivePosition)) {
-                            if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
-                                lineInactive = true;
-
-                            }
-                        }
-                        // } else {
-                        //     if (line == inactivePosition.startLine) {
-                        //         // lineInactive = true;
-
-                        //     }
-                        // }
-                    }
-
-                    if (!lineInactive) {
-                        if (statuses[file][line] !== 'fail') {
-                            statuses[file][line] = markAsFailed ? 'fail' : 'success';
-                        }
-                    } else {
-                        // if (statuses[file][line] !== 'fail') {
-                        //     statuses[file][line] = 'uncovered';
-                        // }
-
-                    }
-                }
-            } else {
-                if (statuses[file][position.startLine] !== 'fail') {
-                    statuses[file][position.startLine] = markAsFailed ? 'fail' : 'success';
-                }
+            if (!filePathCache[position.fileIndex]) {
+                filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
             }
+            statuses[filePathCache[position.fileIndex]][position.startLine] = markAsFailed ? 'fail' : 'success';
         }
     }
 
+    return;
+
+    // let someTestFailed = testResults.find(test => test.error);
+
+    // let inactivePositions: PositionCovered[] = [];
+    // inactivePositionsJSON.forEach((pos: string) => inactivePositions.push(JSON.parse(pos)));
+
+    // for (let test of testResults) {
+    //     let markAsFailed = (test.testIndex === -1 && someTestFailed) || test.error;
+
+    //     for (let position of test.positionsCovered) {
+    //         let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
+
+    //         if (isRange(position)) {
+    //             for (let line = position.startLine; line <= position.endLine; line++) {
+    //                 let lineInactive = false;
+
+    //                 for (let inactivePosition of inactivePositions) {
+    //                     if (isRange(inactivePosition)) {
+    //                         if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
+    //                             lineInactive = true;
+
+    //                         }
+    //                     }
+    //                     // } else {
+    //                     //     if (line == inactivePosition.startLine) {
+    //                     //         // lineInactive = true;
+
+    //                     //     }
+    //                     // }
+    //                 }
+
+    //                 if (!lineInactive) {
+    //                     if (statuses[file][line] !== 'fail') {
+    //                         statuses[file][line] = markAsFailed ? 'fail' : 'success';
+    //                     }
+    //                 } else {
+    //                     // if (statuses[file][line] !== 'fail') {
+    //                     //     statuses[file][line] = 'uncovered';
+    //                     // }
+
+    //                 }
+    //             }
+    //         } else {
+    //             if (statuses[file][position.startLine] !== 'fail') {
+    //                 statuses[file][position.startLine] = markAsFailed ? 'fail' : 'success';
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 export let kiwiPlugin = {
