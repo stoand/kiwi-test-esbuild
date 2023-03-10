@@ -15,9 +15,10 @@
     Also use a diff library and syntax highlighting
 7. [TODO] Multicore execution
 8. [TODO] partial line coverage
-9. [TODO] optimize computeLineStatuses
+9. [DONE] optimize computeLineStatuses
 10. [TODO] implement a reverse editor communication scheme
     The client should call the runner
 11. [TODO] infer if tests are sharing state / are pure (possibly through typescript)
     use https://github.com/jensnicolay/jipda/blob/jsep/protopurity/test/purityTests.js
     https://prepack.io/
+12. [TODO] fix line statuses not working on larger files
