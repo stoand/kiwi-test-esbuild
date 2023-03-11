@@ -1,7 +1,10 @@
 import * as esbuild from 'esbuild';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { line_statuses, line_notifications, init_highlighters, FileStatuses } from './kakoune_interface';
+import {
+    line_statuses, line_notifications, init_highlighters, FileStatuses,
+    register_full_notifications, FullNotification
+} from './kakoune_interface';
 
 let originalConsoleLog = console.log;
 
@@ -43,6 +46,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     let statuses = {};
     let notifications = {};
+    let fullNotifications: FullNotification[] = [];
 
     let testResults: TestResult[] = [];
 
@@ -179,12 +183,28 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     for (let log of consoleLogs) {
         let file = path.resolve(currentWorkingDir, fileIndices[log.position.fileIndex] || '');
         notifications[file][log.position.startLine + 1] = { text: log.contents.join(' '), color: 'normal' };
+
+        let json;
+
+        if (log.contents.length > 1) {
+            json = JSON.stringify(log.contents[0], null, 2);
+        } else {
+            let contents = [];
+            for (let content of log.contents) {
+                contents.push(content);
+            }
+            json = JSON.stringify(contents, null, 2);
+        }
+
+        fullNotifications.push({ file, line: log.position.startLine + 1, json });
     }
 
     for (let error of thrownErrors) {
         let file = path.resolve(currentWorkingDir, fileIndices[error.position.fileIndex] || '');
         notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
         statuses[file][error.position.startLine] = 'fail';
+        
+        fullNotifications.push({ file, line: error.position.startLine + 1, json: JSON.stringify(error.message, null, 2) });
     }
 
     let startKakouneOps = now();
@@ -194,6 +214,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     line_statuses(statuses);
 
     line_notifications(notifications);
+    
+    register_full_notifications(fullNotifications);
 
     logTime('Kakoune Ops', startKakouneOps);
 }

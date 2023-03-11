@@ -54,6 +54,9 @@ export function running_instances() {
 
 // #SPC-kakoune_interface.init_highlighters
 export function init_highlighters() {
+    
+    createTmpDir();
+    
     let commands = `
 		eval %sh{ [ -z "$kak_opt_kiwi_line_statuses" ] &&
 			echo "declare-option line-specs kiwi_line_statuses; addhl global/ flag-lines Default kiwi_line_statuses" }
