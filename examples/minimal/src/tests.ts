@@ -6,6 +6,7 @@ import { it, xit, fit } from 'kiwi-test-esbuild';
 console.log('asdf');
 
 let asdf = {};
+console.log(asdf);
 
 it('can add', () => {
 

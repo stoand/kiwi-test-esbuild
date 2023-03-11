@@ -9,11 +9,11 @@ const deadKakInstancePostfix = '(dead)';
 
 const maxNotificationLength = 30;
 const inlineNormalTextColor = 'Default';
-const inlineErrorTextColor = 'Error';
+const inlineErrorTextColor = 'rgb:ffffff,rgb:ab4434';
 const statusChars = '██';
-const uncoveredColors = 'StatusLine';
-const failedColors = 'Error';
-const successColors = 'string';
+const uncoveredColors = 'rgb:434343';
+const failedColors = 'rgb:ab4434';
+const successColors = 'rgb:a1b56b';
 
 const notificationBufferName = '*kiwi-notification*';
 
@@ -83,8 +83,7 @@ export function line_statuses(file_statuses: FileStatuses) {
 
     let format_lines = (lines: LineStatuses) => Object.keys(lines).map(line => {
         let value = lines[Number(line)];
-        let spaces = statusChars.split('').map(_ => ' ').join('');
-        let text = value != 'success' ? spaces : '%opt{kiwi_status_chars}';
+        let text = '%opt{kiwi_status_chars}';
         return `\\"${Number(line) + 1}|{%opt{kiwi_color_${value}}}${text}\\"`;
     }).join(' ');
 
