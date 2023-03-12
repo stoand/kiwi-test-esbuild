@@ -1,53 +1,67 @@
-import { add } from './app';
-import { it, xit, fit } from 'kiwi-test-esbuild';
+// import { add } from './app';
+import { it } from 'kiwi-test-esbuild';
+// import { expect } from 'chai';
+import { errorPassthrough } from './error_passthrough';
+
+
+it('handles deepErrors', () => {
+    console.log('asda');
+
+    errorPassthrough();
+});
 
 // g.a = 1;
-    
-console.log('asdf');
 
-let asdf = {};
-console.log(asdf);
+// console.log('asdf');
 
-it('can add', () => {
+// let asdf = {};
+// console.log(asdf);
 
-    console.log('add result = ', add(2, 3));
-    
-    if (false) {
-        console.log('ignore');
-        
-        console.log('us');
-    }
-});
+// it('can add', () => {
 
-it('supports async', async () => {
-    console.log('add result = ' + add(0, 3));
-    
-    await new Promise((resolve, reject) => {
-        setTimeout(() => resolve(undefined), 3);
-    });
-});
+//     console.log('add result = ', add(2, 3));
 
-xit('this should not run', () => {
-    console.log('silent');
-});
+//     if (false) {
+//         console.log('ignore');
+
+//         console.log('us');
+//     }
+// });
+
+// it('supports async', async () => {
+//     console.log('add result = ' + add(0, 3));
+
+//     await new Promise((resolve, reject) => {
+//         setTimeout(() => resolve(undefined), 3);
+//     });
+// });
+
+// xit('this should not run', () => {
+//     console.log('silent');
+// });
 
 
-it('focus only on this test', () => {
-    console.log('asdf');
-    add(2,3);
-    
-    // === 1
-    // 
-    
-    // g.a = 1;
-    
-})
+// it('focus only on this test', () => {
+//     // console.log(expect);
 
-it('focus only on this test', () => {
-    console.log('asdf');
-    add(2,3);
-    
-    // throw new Error('asd3234f)';
-    f.a = 1;
-    
-})
+//     // expect({ a: 1234 }).to.deep.equal({ a: 1234, b: 1 });
+//     deepError();
+
+//     console.log('asdf');
+//     add(2, 3);
+
+//     // === 1
+//     // 
+
+//     // g.a = 1;
+
+// })
+
+// it('focus only on this test', () => {
+//     console.log('asdf');
+//     add(2, 3);
+
+//     // throw new Error('asd3234f)';
+//     // f.a = 1;
+
+// })

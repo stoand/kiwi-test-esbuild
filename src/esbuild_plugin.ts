@@ -42,7 +42,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     let fileIndices = {};
     let positionsAvailable: PositionCovered[] = [];
     let consoleLogs: { contents: any[], position: Position }[] = [];
-    let thrownErrors: { message: string, position: Position }[] = [];
+    let thrownErrors: { message: string, actual?: any, expected?: any, position: Position }[] = [];
 
     let statuses = {};
     let notifications = {};
@@ -120,14 +120,15 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
             // logTime('code setup took', beforeSetup);
         } catch (e) {
-            thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
+            thrownErrors.push({
+                message: e.message, actual: e.actual, expected: e.expected,
+                position: prevPositionsCovered[prevPositionsCovered.length - 1]
+            });
 
-            originalConsoleLog(e);
             preTestError = true;
         }
 
-
-        // originalConsoleLog(consoleLogs);
+        // originalConsoleLog(prevPositionsCovered.map(i => ({ file: fileIndices[i.fileIndex], ...i })));
 
         let startTestRuns = now();
 
@@ -144,9 +145,23 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
                     await test.fn();
                 } catch (e) {
                     error = true;
-                    thrownErrors.push({ message: e.message, position: prevPositionsCovered[prevPositionsCovered.length - 1] });
+
+                    let prevFile = undefined;
+                    for (let i = prevPositionsCovered.length - 1; i >= 0; i--) {
+                        let position = prevPositionsCovered[i];
+
+                        if (prevFile != position.fileIndex) {
+                            thrownErrors.push({
+                                message: e.message, actual: e.actual, expected: e.expected,
+                                position
+                            });
+                            
+                            prevFile = position.fileIndex;
+                        }
+                    }
                 }
                 testResults.push({ testIndex, positionsCovered, error });
+                prevPositionsCovered = [];
                 positionsCovered = [];
             }
         }
@@ -154,9 +169,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         logTime('tests took', startTestRuns);
 
     } else {
-
-        console.error(errors);
-
         let error = errors[0];
         fileIndices[0] = error.location.file;
         thrownErrors.push({
@@ -186,7 +198,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         let json;
 
-        if (log.contents.length > 1) {
+        if (log.contents.length == 1) {
             json = JSON.stringify(log.contents[0], null, 2);
         } else {
             let contents = [];
@@ -203,7 +215,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         let file = path.resolve(currentWorkingDir, fileIndices[error.position.fileIndex] || '');
         notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
         statuses[file][error.position.startLine] = 'fail';
-        
+
         fullNotifications.push({ file, line: error.position.startLine + 1, json: JSON.stringify(error.message, null, 2) });
     }
 
@@ -214,7 +226,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     line_statuses(statuses);
 
     line_notifications(notifications);
-    
+
     register_full_notifications(fullNotifications);
 
     logTime('Kakoune Ops', startKakouneOps);

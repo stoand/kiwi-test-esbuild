@@ -9,6 +9,8 @@
   },
   "author": "",
   "dependencies": {
+    "@types/chai": "^4.3.4",
+    "chai": "^4.3.7",
     "esbuild": "^0.17.10",
     "kiwi-test-esbuild": "file:../../",
     "react": "^18.2.0",

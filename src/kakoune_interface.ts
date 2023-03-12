@@ -25,7 +25,7 @@ const refreshHighlighting = [
     // 'ModeChange',
     // 'InsertKey',
     // 'NormalKey',
-    'RawKey',
+    // 'RawKey',
 ];
 
 export type LineStatus = 'uncovered' | 'fail' | 'success';
@@ -209,7 +209,7 @@ export function line_notifications(file_notifications: FileLabels) {
     `;
 
     line_notificaitons_previous_files = Object.keys(file_notifications);
-
+    
     command_all(commands);
 }
 
