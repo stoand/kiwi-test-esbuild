@@ -4,14 +4,14 @@
   "description": "Minimal Example of how Kiwi Esbuild can be used",
   "scripts": {
     "test": "node --enable-source-maps kiwi-test.esbuild.mjs",
-    "update-esbuild": "(cd ~/esbuild && make esbuild) && cp ~/esbuild/esbuild node_modules/.bin",
-    "dev-super": "(cd ../.. && npm i) && npm i && nodemon -e mjs,ts,tsx,go -w ../.. -w ~/esbuild/internal -x 'npm run update-esbuild && (cd ../.. && npm run build) && npm test || echo'"
+    "update-esbuild": "(cd ../../esbuild && make esbuild platform-neutral && cp esbuild npm/esbuild/bin)",
+    "dev-super": "(cd ../.. && npm i) && npm i && nodemon -e mjs,ts,tsx,go -w ../../src/ -w ../../esbuild/internal -x 'npm run update-esbuild && (cd ../.. && npm run build) && npm test || echo'"
   },
   "author": "",
   "dependencies": {
     "@types/chai": "^4.3.4",
     "chai": "^4.3.7",
-    "esbuild": "^0.17.10",
+    "esbuild": "file:../../esbuild/npm/esbuild/",
     "kiwi-test-esbuild": "file:../../",
     "react": "^18.2.0",
     "tsx": "^3.12.3"

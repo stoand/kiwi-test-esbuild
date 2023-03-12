@@ -11,18 +11,21 @@ import { errorPassthrough } from './error_passthrough';
     
 it('handles logs', () => {
 
-    console.log('l');
+    console.log('g');
 });
+
 
 it('handles deepErrors', () => {
 
-    console.log('l');
+    console.log('b');
     
     
     // b.a = 9;
     
+    
     expect({ a: 1 }).to.deep.equal({ a: 1234, b: 1 });
     
 
-    // errorPassthrough();
+    errorPassthrough();
+    
 });

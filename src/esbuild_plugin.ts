@@ -111,8 +111,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             // the first level of errors is taken from the prevPositionsCovered
             let position = prevPositionsCovered[prevPositionsCovered.length - 1];
 
-            originalConsoleLog(typeof e, 'type');
-
             thrownErrors.push({
                 message: e.message, actual: e.actual, expected: e.expected,
                 position
@@ -218,6 +216,9 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     for (let error of thrownErrors) {
         let file = path.resolve(currentWorkingDir, fileIndices[error.position.fileIndex] || '');
+        if (!notifications[file]) {
+           notifications[file] = {};
+        }
         notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
         statuses[file][error.position.startLine] = 'fail';
 
@@ -231,7 +232,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         fullNotifications.push({ file, line: error.position.startLine + 1, json });
     }
-
+    
     let testLocations = [];
     let failedTestLocations = [];
     let testFilesScan = new Set();

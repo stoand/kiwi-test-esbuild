@@ -8,6 +8,7 @@ async function kiwiTest() {
         sourcemap: true,
         sourcesContent: false,
         write: false,
+        instrument: true,
         plugins: [kiwiPlugin],
     });
 
