@@ -263,57 +263,6 @@ function computeLineStatuses(statuses: FileStatuses, testResults: TestResult[], 
             statuses[filePathCache[position.fileIndex]][position.startLine] = markAsFailed ? 'fail' : 'success';
         }
     }
-
-    return;
-
-    // let someTestFailed = testResults.find(test => test.error);
-
-    // let inactivePositions: PositionCovered[] = [];
-    // inactivePositionsJSON.forEach((pos: string) => inactivePositions.push(JSON.parse(pos)));
-
-    // for (let test of testResults) {
-    //     let markAsFailed = (test.testIndex === -1 && someTestFailed) || test.error;
-
-    //     for (let position of test.positionsCovered) {
-    //         let file = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
-
-    //         if (isRange(position)) {
-    //             for (let line = position.startLine; line <= position.endLine; line++) {
-    //                 let lineInactive = false;
-
-    //                 for (let inactivePosition of inactivePositions) {
-    //                     if (isRange(inactivePosition)) {
-    //                         if (line >= inactivePosition.startLine && line < inactivePosition.endLine) {
-    //                             lineInactive = true;
-
-    //                         }
-    //                     }
-    //                     // } else {
-    //                     //     if (line == inactivePosition.startLine) {
-    //                     //         // lineInactive = true;
-
-    //                     //     }
-    //                     // }
-    //                 }
-
-    //                 if (!lineInactive) {
-    //                     if (statuses[file][line] !== 'fail') {
-    //                         statuses[file][line] = markAsFailed ? 'fail' : 'success';
-    //                     }
-    //                 } else {
-    //                     // if (statuses[file][line] !== 'fail') {
-    //                     //     statuses[file][line] = 'uncovered';
-    //                     // }
-
-    //                 }
-    //             }
-    //         } else {
-    //             if (statuses[file][position.startLine] !== 'fail') {
-    //                 statuses[file][position.startLine] = markAsFailed ? 'fail' : 'success';
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 export let kiwiPlugin = {
