@@ -3,7 +3,7 @@ import { it, fit } from 'kiwi-test-esbuild';
 import { expect } from 'chai';
 import { errorPassthrough } from './error_passthrough';
 
-    errorPassthrough();
+    // errorPassthrough();
     
     // a.j = 1
     

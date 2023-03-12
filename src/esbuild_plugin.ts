@@ -231,31 +231,54 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         fullNotifications.push({ file, line: error.position.startLine + 1, json });
     }
-    
+
     let testLocations = [];
     let failedTestLocations = [];
-    let testFiles = [];
-    let nonTestFiles = [];
+    let testFilesScan = new Set();
+    let nonTestFilesScan = new Set(Object.values(fileIndices));
     
+    nonTestFilesScan.delete('');
+    nonTestFilesScan.delete('<runtime>');
+    nonTestFilesScan.delete('(disabled):util');
+
     for (let testResult of testResults) {
         if (testResult.testIndex !== -1) {
             let position = testResult.positionsCovered[0];
             let file = fileIndices[position.fileIndex];
+
+            nonTestFilesScan.delete(file);
+            testFilesScan.add(file);
+
             let location = { file, line: position.startLine + 1, message: testResult.label };
-                
+
             if (testResult.error) {
                 failedTestLocations.push(location);
             }
             testLocations.push(location);
         }
     }
+    
+    let testFiles = [];
+    let nonTestFiles = [];
+    
+    for (let file of testFilesScan) {
+        testFiles.push({ file, line: 1, message: '' });
+    }
+    
+    for (let file of nonTestFilesScan) {
+        nonTestFiles.push({ file, line: 1, message: '' });
+    }
+
+    console.log(nonTestFilesScan);
 
     let startKakouneOps = now();
 
     init_highlighters();
-    
-    add_location_list_command('all-tests', testLocations);  
-    add_location_list_command('failed-tests', failedTestLocations);  
+
+    add_location_list_command('all-tests', testLocations);
+    add_location_list_command('failed-tests', failedTestLocations);
+    add_location_list_command('all-test-files', testFiles);
+    add_location_list_command('all-covered-non-test-files', nonTestFiles);
 
     line_statuses(statuses);
 
