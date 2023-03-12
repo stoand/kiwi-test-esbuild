@@ -1,4 +1,4 @@
-// import { add } from './app';
+import { add } from './app';
 import { it } from 'kiwi-test-esbuild';
 import { expect } from 'chai';
 import { errorPassthrough } from './error_passthrough';
@@ -11,10 +11,14 @@ import { errorPassthrough } from './error_passthrough';
     
 
 it('handles deepErrors', () => {
-    console.log('s');
-    // b.a = 1;
+
+    console.log('f');
     
-    expect({ a: 1234 }).to.deep.equal({ a: 1234, b: 1 });
+    
+    // b.a = 9;
+    
+    // expect({ a: 1234 }).to.deep.equal({ a: 1234, b: 1 });
+    
 
     // errorPassthrough();
 });

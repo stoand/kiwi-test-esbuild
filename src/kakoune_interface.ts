@@ -21,7 +21,7 @@ export const tempDir = '/tmp/__kiwi_tmp435398/';
 
 // When to update the highlighters
 const refreshHighlighting = [
-    'WinDisplay',
+    // 'WinDisplay',
     // 'ModeChange',
     // 'InsertKey',
     // 'NormalKey',
@@ -54,9 +54,9 @@ export function running_instances() {
 
 // #SPC-kakoune_interface.init_highlighters
 export function init_highlighters() {
-    
+
     createTmpDir();
-    
+
     let commands = `
 		eval %sh{ [ -z "$kak_opt_kiwi_line_statuses" ] &&
 			echo "declare-option line-specs kiwi_line_statuses; addhl global/ flag-lines Default kiwi_line_statuses" }
@@ -96,6 +96,7 @@ export function line_statuses(file_statuses: FileStatuses) {
             file_statuses[previous_file] = {};
         }
     }
+
 
     let set_highlighters = Object.keys(file_statuses).map(file => 'eval %sh{ [ "$kak_buffile" = "' + file + '" ] && ' +
         'echo "set-option buffer kiwi_line_statuses %val{timestamp} ' + format_lines(file_statuses[file]) + '" }').join('\n');
@@ -159,6 +160,15 @@ export function md5Hash(input: string) {
 // #SPC-kakoune_interface.line_notifications
 export function line_notifications(file_notifications: FileLabels) {
 
+    // anti-bounce:
+    // when only a single notification is present the notifications 
+    // area will disappear when text on that line is edited
+    //
+    // having an invisible notfication on a negative line prevents this behavior
+    Object.keys(file_notifications).map(file => {
+        file_notifications[file]['-1'] = { text: ' ', color: 'normal' };
+    });
+
     let format_lines = (lines: LineLabels) => Object.keys(lines).map(line => {
         let { color, text } = lines[Number(line)];
         let truncated_text = fix_size(text, maxNotificationLength);
@@ -180,11 +190,11 @@ export function line_notifications(file_notifications: FileLabels) {
             [ "$sum" = "${md5Hash(file) + '  -'}" ] && \
                 echo "kiwi_line_notifications_${md5Hash(file)}" || echo nop }
     `).join('\n');
-    
+
 
     let remove_highlighters = line_notificaitons_previous_files.filter(file => !file_notifications[file]).map(file =>
         'eval %sh{ [ "$kak_buffile" = "' + file + '" ] && ' +
-            'echo "set-option buffer kiwi_line_notifications %val{timestamp} " }').join('\n');
+        'echo "set-option buffer kiwi_line_notifications %val{timestamp} " }').join('\n');
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
         `hook -group kiwi-line-notifications-group global ${name} .* kiwi_line_notifications`).join('\n');
@@ -209,19 +219,19 @@ export function line_notifications(file_notifications: FileLabels) {
     `;
 
     line_notificaitons_previous_files = Object.keys(file_notifications);
-    
+
     command_all(commands);
 }
 
 /// #SPC-kakoune_interface.add_location_list_command
 export function add_location_list_command(name: string, locations: Location[], selectCurrentLine = false) {
-    let contents = locations.map(({file, line, message}) =>
-    	`${file}:${line}: ${message}`).join('\n');
+    let contents = locations.map(({ file, line, message }) =>
+        `${file}:${line}: ${message}`).join('\n');
 
     let selectLocationCommands = '';
 
     if (selectCurrentLine) {
-        let locationLines: {[name: string]: { index: number, newLines: number }[] } = {};
+        let locationLines: { [name: string]: { index: number, newLines: number }[] } = {};
 
         let locationAcc = 1;
 
@@ -230,14 +240,14 @@ export function add_location_list_command(name: string, locations: Location[], s
             locationLines[locationName] = locationLines[locationName] || [];
 
             let newLines = location.message.split('\n').length;
-            locationLines[locationName].push({ index: locationIndex + locationAcc, newLines } );
+            locationLines[locationName].push({ index: locationIndex + locationAcc, newLines });
             locationAcc += newLines - 1;
         });
 
         for (let locationName in locationLines) {
             let selections = locationLines[locationName].map(loc =>
                 `${loc.index}.1,${loc.index + loc.newLines - 1}.999`).join(' ');
-            
+
             selectLocationCommands += `
                 eval %sh{
                     [ "$kak_opt_prev_buffile:$kak_opt_prev_cursor_line" = "${locationName}" ] && \
@@ -248,7 +258,7 @@ export function add_location_list_command(name: string, locations: Location[], s
     }
 
     let location = path.join(tempDir, name);
-    
+
     writeFileSync(location, contents);
 
     let nameWithDashes = name.replace(/_/g, '-');
@@ -277,7 +287,7 @@ export function jump_to_line(file: string, line: number) {
 export function register_full_notifications(notifications: FullNotification[]) {
 
     let notificationCommands = notifications.map(notification => {
-        
+
         let hash = md5Hash(notification.file + ':' + notification.line);
         let contentsPath = path.join(tempDir, './notification_' + hash + '.json');
 
@@ -303,6 +313,6 @@ export function register_full_notifications(notifications: FullNotification[]) {
             ${notificationCommands.join('\n')}
         }
     `;
-    
+
     command_all(commands);
 }
