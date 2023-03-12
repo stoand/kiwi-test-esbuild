@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
     line_statuses, line_notifications, init_highlighters, FileStatuses,
-    register_full_notifications, FullNotification
+    register_full_notifications, FullNotification, add_location_list_command
 } from './kakoune_interface';
 
 let originalConsoleLog = console.log;
@@ -12,7 +12,7 @@ type Position = { fileIndex: number, startLine: number, startCol: number }
 type PositionRange = { fileIndex: number, startLine: number, startCol: number, endLine: number, endCol: number };
 type PositionCovered = Position | PositionRange;
 
-type TestResult = { testIndex: number, positionsCovered: PositionCovered[], error: boolean };
+type TestResult = { label: string, testIndex: number, positionsCovered: PositionCovered[], error: boolean };
 
 function now() {
     return new Date();
@@ -142,22 +142,15 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
             `)(require);
 
             logTime('code load took', start);
-
-            // let beforeSetup = now();
-            // global.__SETUP();
-
-            // logTime('code setup took', beforeSetup);
         } catch (e) {
             handleError(e);
 
             preTestError = true;
         }
 
-        // originalConsoleLog(prevPositionsCovered.map(i => ({ file: fileIndices[i.fileIndex], ...i })));
-
         let startTestRuns = now();
 
-        testResults.push({ testIndex: -1, positionsCovered, error: preTestError });
+        testResults.push({ label: '<setup>', testIndex: -1, positionsCovered, error: preTestError });
         positionsCovered = [];
 
         let fitOnly = global.__TESTS.find(test => test.priority);
@@ -173,7 +166,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
                     handleError(e);
                 }
-                testResults.push({ testIndex, positionsCovered, error });
+                testResults.push({ label: test.label, testIndex, positionsCovered, error });
                 prevPositionsCovered = [];
                 positionsCovered = [];
             }
@@ -200,7 +193,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
     let startCompute = now();
 
-    // TODO optimize
     computeLineStatuses(statuses, testResults, fileIndices, positionsAvailable);
 
     logTime('Compute line statuses', startCompute);
@@ -239,10 +231,31 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         fullNotifications.push({ file, line: error.position.startLine + 1, json });
     }
+    
+    let testLocations = [];
+    let failedTestLocations = [];
+    let testFiles = [];
+    let nonTestFiles = [];
+    
+    for (let testResult of testResults) {
+        if (testResult.testIndex !== -1) {
+            let position = testResult.positionsCovered[0];
+            let file = fileIndices[position.fileIndex];
+            let location = { file, line: position.startLine + 1, message: testResult.label };
+                
+            if (testResult.error) {
+                failedTestLocations.push(location);
+            }
+            testLocations.push(location);
+        }
+    }
 
     let startKakouneOps = now();
 
     init_highlighters();
+    
+    add_location_list_command('all-tests', testLocations);  
+    add_location_list_command('failed-tests', failedTestLocations);  
 
     line_statuses(statuses);
 

@@ -21,6 +21,7 @@ export const tempDir = '/tmp/__kiwi_tmp435398/';
 
 // When to update the highlighters
 const refreshHighlighting = [
+    // 'BufWritePre',
     // 'WinDisplay',
     // 'ModeChange',
     // 'InsertKey',
@@ -217,6 +218,8 @@ export function line_notifications(file_notifications: FileLabels) {
     	
     	kiwi_line_notifications
     `;
+    
+    // writeFileSync('/tmp/not', commands, 'utf8');
 
     line_notificaitons_previous_files = Object.keys(file_notifications);
 

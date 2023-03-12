@@ -22,3 +22,4 @@
     use https://github.com/jensnicolay/jipda/blob/jsep/protopurity/test/purityTests.js
     https://prepack.io/
 12. [TODO] fix line statuses not working on larger files
+13. [TODO] fix blinking text and line statuses on the line that was changed
