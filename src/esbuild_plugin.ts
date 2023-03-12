@@ -110,14 +110,14 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         function handleError(e: Error & { actual?: string, expected?: string }) {
             // the first level of errors is taken from the prevPositionsCovered
             let position = prevPositionsCovered[prevPositionsCovered.length - 1];
-            
+
             originalConsoleLog(typeof e, 'type');
 
             thrownErrors.push({
                 message: e.message, actual: e.actual, expected: e.expected,
                 position
             });
-            
+
             let searchedFiles = { [position.fileIndex]: true };
 
             // all subsequent errors are taken from positionsCovered
@@ -231,8 +231,8 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         let json;
 
-        if ('expected' in error && 'actual' in error) { 
-            json = JSON.stringify({ expected: error.expected, actual: error.actual }, null, 2);
+        if ('expected' in error && 'actual' in error) {
+            json = JSON.stringify({ actual: error.actual, expected: error.expected }, null, 2);
         } else {
             json = JSON.stringify(error.message, null, 2);
         }
