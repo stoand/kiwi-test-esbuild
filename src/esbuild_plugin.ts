@@ -107,6 +107,31 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
         let preTestError = false;
 
+        function handleError(e: Error & { actual?: string, expected?: string }) {
+            // the first level of errors is taken from the prevPositionsCovered
+            let position = prevPositionsCovered[prevPositionsCovered.length - 1];
+            let prevFile = position.fileIndex;
+
+            thrownErrors.push({
+                message: e.message, actual: e.actual, expected: e.expected,
+                position
+            });
+
+            // all subsequent errors are taken from positionsCovered
+            for (let i = positionsCovered.length - 1; i >= 0; i--) {
+                let position = positionsCovered[i];
+
+                if (prevFile != position.fileIndex) {
+                    thrownErrors.push({
+                        message: e.message, actual: e.actual, expected: e.expected,
+                        position
+                    });
+
+                    prevFile = position.fileIndex;
+                }
+            }
+        }
+
         try {
             Function('require', `
             delete require.cache["/tmp/__kiwi.js"];            
@@ -120,10 +145,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
 
             // logTime('code setup took', beforeSetup);
         } catch (e) {
-            thrownErrors.push({
-                message: e.message, actual: e.actual, expected: e.expected,
-                position: prevPositionsCovered[prevPositionsCovered.length - 1]
-            });
+            handleError(e);
 
             preTestError = true;
         }
@@ -146,19 +168,7 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
                 } catch (e) {
                     error = true;
 
-                    let prevFile = undefined;
-                    for (let i = prevPositionsCovered.length - 1; i >= 0; i--) {
-                        let position = prevPositionsCovered[i];
-
-                        if (prevFile != position.fileIndex) {
-                            thrownErrors.push({
-                                message: e.message, actual: e.actual, expected: e.expected,
-                                position
-                            });
-                            
-                            prevFile = position.fileIndex;
-                        }
-                    }
+                    handleError(e);
                 }
                 testResults.push({ testIndex, positionsCovered, error });
                 prevPositionsCovered = [];

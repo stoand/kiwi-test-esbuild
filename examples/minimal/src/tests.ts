@@ -3,9 +3,17 @@ import { it } from 'kiwi-test-esbuild';
 // import { expect } from 'chai';
 import { errorPassthrough } from './error_passthrough';
 
+    // errorPassthrough();
+    
+    // a.j = 1
+    
+    // throw new Error("asdf");
+    
 
 it('handles deepErrors', () => {
     console.log('asda');
+    b.a = 1;
+    
 
     errorPassthrough();
 });
