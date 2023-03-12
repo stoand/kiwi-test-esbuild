@@ -110,24 +110,27 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         function handleError(e: Error & { actual?: string, expected?: string }) {
             // the first level of errors is taken from the prevPositionsCovered
             let position = prevPositionsCovered[prevPositionsCovered.length - 1];
-            let prevFile = position.fileIndex;
+            
+            originalConsoleLog(typeof e, 'type');
 
             thrownErrors.push({
                 message: e.message, actual: e.actual, expected: e.expected,
                 position
             });
+            
+            let searchedFiles = { [position.fileIndex]: true };
 
             // all subsequent errors are taken from positionsCovered
-            for (let i = positionsCovered.length - 1; i >= 0; i--) {
+            for (let i = positionsCovered.length - 2; i >= 0; i--) {
                 let position = positionsCovered[i];
 
-                if (prevFile != position.fileIndex) {
+                if (!searchedFiles[position.fileIndex]) {
                     thrownErrors.push({
                         message: e.message, actual: e.actual, expected: e.expected,
                         position
                     });
 
-                    prevFile = position.fileIndex;
+                    searchedFiles[position.fileIndex] = true;
                 }
             }
         }
