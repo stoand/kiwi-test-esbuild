@@ -226,7 +226,15 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         notifications[file][error.position.startLine + 1] = { text: error.message, color: 'error' };
         statuses[file][error.position.startLine] = 'fail';
 
-        fullNotifications.push({ file, line: error.position.startLine + 1, json: JSON.stringify(error.message, null, 2) });
+        let json;
+
+        if ('expected' in error && 'actual' in error) { 
+            json = JSON.stringify({ expected: error.expected, actual: error.actual }, null, 2);
+        } else {
+            json = JSON.stringify(error.message, null, 2);
+        }
+
+        fullNotifications.push({ file, line: error.position.startLine + 1, json });
     }
 
     let startKakouneOps = now();
