@@ -269,8 +269,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
         nonTestFiles.push({ file, line: 1, message: '' });
     }
 
-    console.log(nonTestFilesScan);
-
     let startKakouneOps = now();
 
     init_highlighters();
