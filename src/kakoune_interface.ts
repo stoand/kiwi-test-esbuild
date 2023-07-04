@@ -178,26 +178,15 @@ export function line_notifications(file_notifications: FileLabels) {
         let escaped_text = escape_flag_lines(truncated_text);
         let color_opt = `kiwi_color_${color}_notification`;
         let num = Number(line);
-        return `"${num}||{Default} {%opt{${color_opt}}}${escaped_text}"`;
+        return `\\"${num}||{Default} {%opt{${color_opt}}}${escaped_text}\\"`;
     }).join(' ');
 
-    let update_highlighter_functions = Object.keys(file_notifications).map((file, index) => `
-    	define-command -hidden -override kiwi_line_notifications_${md5Hash(file)} %|
-    	    set-option buffer kiwi_line_notifications %val{timestamp} ${format_lines(file_notifications[file])}
-    	|
-    `).join('\n');
-
-    let set_highlighters = Object.keys(file_notifications).map((file, index) => `
-        eval %sh{
-            sum=$(echo -n "$kak_buffile" | md5sum)
-            [ "$sum" = "${md5Hash(file) + '  -'}" ] && \
-                echo "kiwi_line_notifications_${md5Hash(file)}" || echo nop }
-    `).join('\n');
-
+    let set_highlighters = Object.keys(file_notifications).map(file => `eval %sh{
+        echo "try %| set-option buffer=""${file}"" kiwi_line_notifications %val{timestamp} ` + format_lines(file_notifications[file]) + '" } |').join('\n');
 
     let remove_highlighters = line_notificaitons_previous_files.filter(file => !file_notifications[file]).map(file =>
-        `eval %sh{
-            echo "set-option buffer=""${file}"" kiwi_line_notifications %val{timestamp} " }`).join('\n');
+        `eval %sh{ try %{
+            echo "set-option buffer=""${file}"" kiwi_line_notifications %val{timestamp} " } }`).join('\n');
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
         `hook -group kiwi-line-notifications-group global ${name} .* kiwi_line_notifications`).join('\n');
@@ -205,8 +194,6 @@ export function line_notifications(file_notifications: FileLabels) {
     let commands = `
 		declare-option str kiwi_color_normal_notification "${inlineNormalTextColor}"
 		declare-option str kiwi_color_error_notification "${inlineErrorTextColor}"
-
-		${update_highlighter_functions}
 
     	define-command -hidden -override kiwi_line_notifications %{
     	    ${set_highlighters}
