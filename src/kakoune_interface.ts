@@ -100,7 +100,7 @@ export function line_statuses(file_statuses: FileStatuses) {
 
 
     let set_highlighters = Object.keys(file_statuses).map(file => `eval %sh{
-        echo "set-option buffer=""${file}"" kiwi_line_statuses %val{timestamp} ` + format_lines(file_statuses[file]) + '" }').join('\n');
+        echo "try %{ set-option buffer=""${file}"" kiwi_line_statuses %val{timestamp} ` + format_lines(file_statuses[file]) + '" } }').join('\n');
 
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
@@ -189,15 +189,15 @@ export function line_notifications(file_notifications: FileLabels) {
 
     let set_highlighters = Object.keys(file_notifications).map((file, index) => `
         eval %sh{
-            sum=$(echo -n "$1" | md5sum)
+            sum=$(echo -n "$kak_buffile" | md5sum)
             [ "$sum" = "${md5Hash(file) + '  -'}" ] && \
                 echo "kiwi_line_notifications_${md5Hash(file)}" || echo nop }
     `).join('\n');
 
 
     let remove_highlighters = line_notificaitons_previous_files.filter(file => !file_notifications[file]).map(file =>
-        'eval %sh{ [ "$1" = "' + file + '" ] && ' +
-        'echo "set-option buffer kiwi_line_notifications %val{timestamp} " }').join('\n');
+        `eval %sh{
+            echo "set-option buffer=""${file}"" kiwi_line_notifications %val{timestamp} " }`).join('\n');
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
         `hook -group kiwi-line-notifications-group global ${name} .* kiwi_line_notifications`).join('\n');
@@ -208,7 +208,7 @@ export function line_notifications(file_notifications: FileLabels) {
 
 		${update_highlighter_functions}
 
-    	define-command -hidden -override -params 1 kiwi_line_notifications %{
+    	define-command -hidden -override kiwi_line_notifications %{
     	    ${set_highlighters}
     	
     		${remove_highlighters}
@@ -217,16 +217,9 @@ export function line_notifications(file_notifications: FileLabels) {
     	remove-hooks global kiwi-line-notifications-group
 
 		${refresh_hooks}
-        
-        define-command -hidden -override kiwi_line_notifications_exec %{
-        	kiwi_line_notifications "%val{buffile}"
-        }
-        
-        kiwi_line_notifications_exec 
-        hook global NormalIdle .* kiwi_line_notifications_exec
+        kiwi_line_notifications
+    	hook global BufOpenFile .* kiwi_line_notifications
     `;
-
-    // writeFileSync('/tmp/not', commands, 'utf8');
 
     line_notificaitons_previous_files = Object.keys(file_notifications);
 
