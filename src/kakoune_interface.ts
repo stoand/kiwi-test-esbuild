@@ -99,15 +99,15 @@ export function line_statuses(file_statuses: FileStatuses) {
     }
 
 
-    let set_highlighters = Object.keys(file_statuses).map(file => 'eval %sh{ [ "$1" = "' + file + '" ] && ' +
-        'echo "set-option buffer kiwi_line_statuses %val{timestamp} ' + format_lines(file_statuses[file]) + '" }').join('\n');
+    let set_highlighters = Object.keys(file_statuses).map(file => `eval %sh{
+        echo "set-option buffer=""${file}"" kiwi_line_statuses %val{timestamp} ` + format_lines(file_statuses[file]) + '" }').join('\n');
 
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
         `hook -group kiwi-line-statuses-group global ${name} .* kiwi_line_statuses`).join('\n');
 
     let commands = `
-    	define-command -hidden -override -params 1 kiwi_line_statuses %{
+    	define-command -hidden -override kiwi_line_statuses %{
     		declare-option str kiwi_status_chars "${statusChars}"
    		
     		declare-option str kiwi_color_uncovered "${uncoveredColors}"
@@ -120,13 +120,10 @@ export function line_statuses(file_statuses: FileStatuses) {
     	remove-hooks global kiwi-line-statuses-group
 
 		${refresh_hooks}
-        
-        define-command -hidden -override kiwi_line_statuses_exec %{
-        	kiwi_line_statuses "%val{buffile}"
-        }
-        
-        kiwi_line_statuses_exec 
-        hook global NormalIdle .* kiwi_line_statuses_exec
+		
+    	kiwi_line_statuses
+    	
+    	hook global BufOpenFile .* kiwi_line_statuses
     `;
 
     line_statuses_previous_files = Object.keys(file_statuses);
