@@ -30,8 +30,6 @@ function logTime(label: string, start?: Date, end: Date = now()) {
 
 export async function runTests(results: Promise<esbuild.BuildResult>) {
 
-    originalConsoleLog('New run ---------------------');
-
     let { outputFiles, errors } = await results;
 
     let start = now();
@@ -279,6 +277,9 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     add_location_list_command('all-test-files', testFiles);
     add_location_list_command('all-covered-non-test-files', nonTestFiles);
 
+    console.log('statuses', statuses);
+    
+
     line_statuses(statuses);
 
     line_notifications(notifications);
@@ -304,6 +305,10 @@ function computeLineStatuses(statuses: FileStatuses, testResults: TestResult[], 
             filePathCache[position.fileIndex] = path.resolve(currentWorkingDir, fileIndices[position.fileIndex] || '');
         }
 
+        if (!statuses[filePathCache[position.fileIndex]]) {
+            statuses[filePathCache[position.fileIndex]] = {};
+        }
+        
         statuses[filePathCache[position.fileIndex]][position.startLine] = 'uncovered';
     }
 

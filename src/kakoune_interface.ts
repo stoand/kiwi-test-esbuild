@@ -72,7 +72,17 @@ export function init_highlighters() {
 
 // #SPC-kakoune_interface.send_command
 export function send_command(instance: string, command: string) {
-    let input = "eval -client client0 '" + command + "'";
+    let add_command_to_hooks = `
+        def -override esbuild-test-reload %{
+            ${command}
+        }
+        
+        esbuild-test-reload
+        
+        hook global BufOpenFile .* esbuild-test-reload
+    `;
+
+    let input = "eval -client client0 '" + add_command_to_hooks + "'";
     return execFileSync('kak', ['-p', instance], { encoding: 'utf8', input });
 }
 
@@ -99,7 +109,7 @@ export function line_statuses(file_statuses: FileStatuses) {
     }
 
 
-    let set_highlighters = Object.keys(file_statuses).map(file => 'eval %sh{ [ "$kak_buffile" = "' + file + '" ] && ' +
+    let set_highlighters = Object.keys(file_statuses).map(file => 'eval %sh{ [ "$1" = "' + file + '" ] && ' +
         'echo "set-option buffer kiwi_line_statuses %val{timestamp} ' + format_lines(file_statuses[file]) + '" }').join('\n');
 
 
@@ -107,7 +117,7 @@ export function line_statuses(file_statuses: FileStatuses) {
         `hook -group kiwi-line-statuses-group global ${name} .* kiwi_line_statuses`).join('\n');
 
     let commands = `
-    	define-command -hidden -override kiwi_line_statuses %{
+    	define-command -hidden -override -params 1 kiwi_line_statuses %{
     		declare-option str kiwi_status_chars "${statusChars}"
    		
     		declare-option str kiwi_color_uncovered "${uncoveredColors}"
@@ -121,7 +131,7 @@ export function line_statuses(file_statuses: FileStatuses) {
 
 		${refresh_hooks}
 		
-    	kiwi_line_statuses
+    	kiwi_line_statuses "%val{buffile}"
     `;
 
     line_statuses_previous_files = Object.keys(file_statuses);
@@ -218,7 +228,7 @@ export function line_notifications(file_notifications: FileLabels) {
     	
     	kiwi_line_notifications
     `;
-    
+
     // writeFileSync('/tmp/not', commands, 'utf8');
 
     line_notificaitons_previous_files = Object.keys(file_notifications);

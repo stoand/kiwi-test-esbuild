@@ -15,7 +15,6 @@ console.log(React.version);
 
 export function add(a: number, b: number): number {
 
-
     // this should be highlighted
 
     return a + b;
