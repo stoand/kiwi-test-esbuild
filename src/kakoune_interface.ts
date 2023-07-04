@@ -72,17 +72,7 @@ export function init_highlighters() {
 
 // #SPC-kakoune_interface.send_command
 export function send_command(instance: string, command: string) {
-    let add_command_to_hooks = `
-        def -override esbuild-test-reload %{
-            ${command}
-        }
-        
-        esbuild-test-reload
-        
-        hook global BufOpenFile .* esbuild-test-reload
-    `;
-
-    let input = "eval -client client0 '" + add_command_to_hooks + "'";
+    let input = "eval -client client0 '" + command + "'";
     return execFileSync('kak', ['-p', instance], { encoding: 'utf8', input });
 }
 
@@ -130,8 +120,13 @@ export function line_statuses(file_statuses: FileStatuses) {
     	remove-hooks global kiwi-line-statuses-group
 
 		${refresh_hooks}
-		
-    	kiwi_line_statuses "%val{buffile}"
+        
+        define-command -hidden -override kiwi_line_statuses_exec %{
+        	kiwi_line_statuses "%val{buffile}"
+        }
+        
+        kiwi_line_statuses_exec 
+        hook global NormalIdle .* kiwi_line_statuses_exec
     `;
 
     line_statuses_previous_files = Object.keys(file_statuses);
@@ -197,14 +192,14 @@ export function line_notifications(file_notifications: FileLabels) {
 
     let set_highlighters = Object.keys(file_notifications).map((file, index) => `
         eval %sh{
-            sum=$(echo -n "$kak_buffile" | md5sum)
+            sum=$(echo -n "$1" | md5sum)
             [ "$sum" = "${md5Hash(file) + '  -'}" ] && \
                 echo "kiwi_line_notifications_${md5Hash(file)}" || echo nop }
     `).join('\n');
 
 
     let remove_highlighters = line_notificaitons_previous_files.filter(file => !file_notifications[file]).map(file =>
-        'eval %sh{ [ "$kak_buffile" = "' + file + '" ] && ' +
+        'eval %sh{ [ "$1" = "' + file + '" ] && ' +
         'echo "set-option buffer kiwi_line_notifications %val{timestamp} " }').join('\n');
 
     let refresh_hooks = refreshHighlighting.map((name: string) =>
@@ -216,7 +211,7 @@ export function line_notifications(file_notifications: FileLabels) {
 
 		${update_highlighter_functions}
 
-    	define-command -hidden -override kiwi_line_notifications %{
+    	define-command -hidden -override -params 1 kiwi_line_notifications %{
     	    ${set_highlighters}
     	
     		${remove_highlighters}
@@ -225,8 +220,13 @@ export function line_notifications(file_notifications: FileLabels) {
     	remove-hooks global kiwi-line-notifications-group
 
 		${refresh_hooks}
-    	
-    	kiwi_line_notifications
+        
+        define-command -hidden -override kiwi_line_notifications_exec %{
+        	kiwi_line_notifications "%val{buffile}"
+        }
+        
+        kiwi_line_notifications_exec 
+        hook global NormalIdle .* kiwi_line_notifications_exec
     `;
 
     // writeFileSync('/tmp/not', commands, 'utf8');

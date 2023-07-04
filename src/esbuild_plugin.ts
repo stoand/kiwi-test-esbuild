@@ -277,9 +277,6 @@ export async function runTests(results: Promise<esbuild.BuildResult>) {
     add_location_list_command('all-test-files', testFiles);
     add_location_list_command('all-covered-non-test-files', nonTestFiles);
 
-    console.log('statuses', statuses);
-    
-
     line_statuses(statuses);
 
     line_notifications(notifications);
